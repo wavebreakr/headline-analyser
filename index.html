@@ -6,8 +6,6 @@
 <title>Headline Analyzer</title>
 
 <style>
-/* -- MOBILE-FIRST LIQUID GLASS UI -- */
-
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
   background: #0a0a0a;
@@ -26,7 +24,6 @@ body {
   border-radius: 18px;
   padding: 20px;
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 0 30px rgba(255,255,255,0.09);
 }
 
@@ -34,7 +31,6 @@ h1 {
   text-align: center;
   margin-bottom: 20px;
   font-weight: 600;
-  letter-spacing: -0.5px;
 }
 
 textarea {
@@ -63,7 +59,6 @@ button {
   cursor: pointer;
 }
 
-/* SCORE BAR */
 .score {
   text-align: center;
   font-size: 2.4rem;
@@ -95,123 +90,173 @@ button {
   transition: width 1.2s ease;
 }
 
-/* Category scores */
 .cat-score {
   font-size: 0.95rem;
   opacity: 0.85;
   margin-top: 6px;
 }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  margin-top: 16px;
+  font-size: 0.95rem;
+}
+
+.legend span {
+  margin: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.highlight-emotional { background: rgba(255,0,128,0.3); }
+.highlight-urgency    { background: rgba(255,128,0,0.3); }
+.highlight-simplicity { background: rgba(0,255,255,0.3); }
+.highlight-trust      { background: rgba(0,255,128,0.3); }
+.highlight-power      { background: rgba(128,0,255,0.3); }
 </style>
 </head>
-
 <body>
 <div class="container">
-  <h1>Headline Analyzer</h1>
+<h1>Headline Analyzer</h1>
+<div class="glass-card">
+  <textarea id="headline" rows="3" placeholder="Type your headline..."></textarea>
+  <button onclick="analyze()">Analyze</button>
 
-  <div class="glass-card">
-    <textarea id="headline" rows="3" placeholder="Type your headline..."></textarea>
-    <button onclick="analyze()">Analyze</button>
+  <div id="results"></div>
 
-    <div id="results"></div>
+  <div class="legend">
+    <span class="highlight-emotional">Emotional</span>
+    <span class="highlight-urgency">Urgency</span>
+    <span class="highlight-simplicity">Simplicity</span>
+    <span class="highlight-trust">Trust</span>
+    <span class="highlight-power">Power</span>
   </div>
+</div>
 </div>
 
 <script>
-/* ----------------------------------------------------------
-   WORD BANKS (placeholders — swap your real 50-word lists)
----------------------------------------------------------- */
-const emotionalWords = ["love","fear","secrets","magic","dream","wild","shock","amazing"];
-const urgencyWords = ["now","today","instantly","hurry","quick","fast","urgent","don't wait"];
-const simplicityWords = ["easy","simple","basic","clear","quickly","guide","steps","how to"];
-const trustWords = ["proven","research","expert","trusted","verified","real","authentic","official"];
-const powerWords = ["unlock","boost","win","master","dominate","crush","supercharge","explode"];
+// ------------------ FULL 500 WORDS ------------------
+// Emotional (100)
+const emotionalWords = ["amazing","astonishing","awe","beautiful","beloved","bliss","breathtaking","brilliant","captivating","charming",
+"comfort","compelling","courage","crave","delight","desire","dream","ecstatic","elevate","embrace","empower","enchant","energize","epic",
+"euphoria","excited","extraordinary","fascinating","fearless","fiery","flourish","forgive","grateful","gripping","happy","heartfelt",
+"heroic","hope","incredible","inspire","intense","joy","joyful","lift","love","lovely","magical","mesmerizing","mind-blowing","miracle",
+"momentum","moving","mystical","overjoyed","passion","powerful","radiant","relief","remarkable","revive","romantic","satisfy","sensational",
+"soulful","soothing","spark","special","spellbinding","spirited","stirring","stunning","surprising","sweet","thrilled","touching","transform",
+"trusting","unforgettable","united","uplift","urgent-feel","valiant","valuable","vibrant","victorious","vivid","warm","wonder","wonderful",
+"wow","yearning","zeal","devotion","ecstatic","fear","shocking","shatter","smile","tender","undaunted","unstoppable"];
 
-/* ----------------------------------------------------------
-   NEW BALANCED SCORING SYSTEM
----------------------------------------------------------- */
+// Urgency (100)
+const urgencyWords = ["act now","alert","almost gone","before it’s too late","breaking","brief","can’t wait","crucial","deadline","don’t delay",
+"don’t miss","end soon","expires","final","flash","faster","fast","few left","go now","hurry","immediately","instant","instantly","last call",
+"last chance","limited","limited time","limited spots","must act","must-see","now","now only","only today","only hours","urgent","priority",
+"quick","quickly","rapid","right away","rush","seconds left","soon","stop waiting","swift","take action","time-sensitive","time’s running out",
+"today","tonight","urgent alert","urgent notice","warning","while available","while you can","window closing","act fast","asap","be quick",
+"beat the clock","before midnight","final notice","ending soon","critical","time-limited","don’t miss out","flash sale","hot now","immediate",
+"jump in","last moment","limited offer","limited edition","low stock","move now","nearing end","now live","now open","running out","secure now",
+"sell out","selling fast","slots filling","snap up","starting now","take advantage","take now","time crunch","urgent today","vanishing",
+"while stocks last","just released","now released","right now","zero delay","ending today","today only"];
 
-function analyze() {
-  const text = document.getElementById("headline").value.toLowerCase().trim();
-  if (!text) return;
+// Simplicity (100)
+const simplicityWords = ["easy","simple","clear","basic","beginner","plain","quick","step-by-step","how to","guide","breakdown","explain",
+"overview","straightforward","shortcut","easy win","no-fuss","clean","minimal","essentials","fundamentals","starter","simple steps",
+"walkthrough","formula","blueprint","checklist","cheat sheet","template","framework","fast track","simple guide","quick guide","no jargon",
+"clarity","simplify","instantly clear","idiot-proof","plug-and-play","direct","quick start","learn fast","no complexity","cut through","strip back",
+"just do this","uncomplicated","accessible","begin","basics","easy method","simple method","core idea","main point","quick lesson","first steps",
+"foundation","easy roadmap","roadmap","simple fix","simple trick","simple hack","quick hack","quick tip","basic tip","easy tip","easy trick",
+"simple process","clearer","cleaner","start here","start now","core steps","just follow","no confusion","quick explanation","simple overview",
+"fast explanation","easy mode","easy path","easy way","straight path","step one","step two","no-frills","easy answer","simple answer",
+"no learning curve","clear results","quick results","simple results","direct steps","easy as pie","simple as that","you can do this","no effort",
+"effortless","totally clear"];
 
-  /* 1. Count matches */
-  function countMatches(list) {
-    let count = 0;
-    for (let w of list) if (text.includes(w)) count++;
-    return count;
-  }
+// Trust (100)
+const trustWords = ["proven","verified","expert","research-backed","trusted","authentic","certified","official","evidence","data","data-driven",
+"peer-reviewed","authority","credible","confirmed","tested","validated","reliable","results","accurate","track record","transparent","honest",
+"genuine","no-nonsense","real-world","documented","endorsed","professional","scientific","science-based","well-known","reputable",
+"trusted by many","community-approved","reviewed","vetted","guarantee","guaranteed","warranty","secure","safe","risk-free","backed",
+"supported","research","stats","statistics","clinical","industry standard","industry-leading","benchmark","case study","success story",
+"customer-approved","trusted choice","trusted leader","consistent","proof","solid","trusted advisor","expert advice","expert insight",
+"authoritative","trustworthy","validated results","compliance","credible source","established","professional-grade","third-party tested",
+"high quality","best practice","legit","real data","trusted source","ethically sourced","no hidden agenda","verified results","pro insight",
+"pro tip","field-tested","battle-tested","official guide","official results","evidence-based","real proof","trusted team","industry-tested",
+"proven strategy","well-tested","solid proof","pro-standard","legitimate","fully verified","pro-approved","scientifically proven","trusted insights"];
 
-  const emotional = countMatches(emotionalWords);
-  const urgency = countMatches(urgencyWords);
-  const simplicity = countMatches(simplicityWords);
-  const trust = countMatches(trustWords);
-  const power = countMatches(powerWords);
+// Power (100)
+const powerWords = ["unlock","boost","explode","dominate","ignite","amplify","supercharge","transform","elevate","maximize","crush","breakthrough",
+"revolutionize","accelerate","power up","skyrocket","unleash","charge","surge","jumpstart","turbocharge","win","master","conquer","level up",
+"upgrade","intensify","crank up","fuel","hypercharge","turbo","attack","dominate now","game-changing","force","impact","blast","launch","trigger",
+"shockwave","epic","massive","unstoppable","mega","prime","hyper","elite","ultimate","radical","optimize","overpower","obliterate","decimate",
+"ramp up","smash","hammer","expand","amplify","break limits","break free","catapult","rocket","hit harder","go big","unbreakable","increase",
+"drive","push","excel","excel now","take over","advance","charge ahead","surpass","command","rule","defy","disrupt","innovate","forceful",
+"dominate fast","upgrade fast","power boost","complete control","pure power","energy boost","shatter","storm","surge forward","power move",
+"prime move","epic win","superpower","ultimate edge","limitless","dominate everything","super elevate","explode results","peak performance"];
 
-  /* 2. Score per category (max 20, each match = 12 pts) */
-  function scoreCat(x) { return Math.min(x * 12, 20); }
+// ------------------ REGEX ------------------
+const emotionalRegex = new RegExp("\\b("+emotionalWords.join("|")+")\\b","gi");
+const urgencyRegex   = new RegExp("\\b("+urgencyWords.join("|")+")\\b","gi");
+const simplicityRegex= new RegExp("\\b("+simplicityWords.join("|")+")\\b","gi");
+const trustRegex     = new RegExp("\\b("+trustWords.join("|")+")\\b","gi");
+const powerRegex     = new RegExp("\\b("+powerWords.join("|")+")\\b","gi");
 
-  const emotionalScore = scoreCat(emotional);
-  const urgencyScore = scoreCat(urgency);
-  const simplicityScore = scoreCat(simplicity);
-  const trustScore = scoreCat(trust);
-  const powerScore = scoreCat(power);
+// ------------------ ANALYSIS ------------------
+function highlightKeywords(text){
+  text=text.replace(emotionalRegex,'<span class="highlight-emotional">$&</span>');
+  text=text.replace(urgencyRegex,'<span class="highlight-urgency">$&</span>');
+  text=text.replace(simplicityRegex,'<span class="highlight-simplicity">$&</span>');
+  text=text.replace(trustRegex,'<span class="highlight-trust">$&</span>');
+  text=text.replace(powerRegex,'<span class="highlight-power">$&</span>');
+  return text;
+}
 
-  /* ----------------------------------------------------------
-     3. LENGTH SCORING (extra 0–20 points)
-     Best practice: 6–12 words is ideal for click-through
-  ---------------------------------------------------------- */
-  const words = text.split(/\s+/).filter(x => x.length > 0);
-  const wordCount = words.length;
+function analyze(){
+  const headline=document.getElementById("headline").value.trim();
+  if(!headline) return;
 
-  let lengthScore = 0;
-  if (wordCount >= 6 && wordCount <= 12) {
-    lengthScore = 20;            // perfect range
-  } else if (wordCount >= 4 && wordCount <= 15) {
-    lengthScore = 12;            // acceptable
-  } else {
-    lengthScore = 4;             // too short/long
-  }
+  const lower=headline.toLowerCase();
+  const countMatches=regex=> (lower.match(regex)||[]).length;
 
-  /* ----------------------------------------------------------
-     4. Final score (max 120 → scaled down to 100)
-  ---------------------------------------------------------- */
-  const raw = emotionalScore + urgencyScore + simplicityScore + trustScore + powerScore + lengthScore;
-  const overall = Math.round((raw / 120) * 100);
+  const emotionalScore=Math.min(countMatches(emotionalRegex)*12,20);
+  const urgencyScore=Math.min(countMatches(urgencyRegex)*12,20);
+  const simplicityScore=Math.min(countMatches(simplicityRegex)*12,20);
+  const trustScore=Math.min(countMatches(trustRegex)*12,20);
+  const powerScore=Math.min(countMatches(powerRegex)*12,20);
 
-  /* ----------------------------------------------------------
-     5. Rating label
-  ---------------------------------------------------------- */
-  let rating = "";
-  if (overall >= 80) rating = "Outstanding";
-  else if (overall >= 70) rating = "Great";
-  else if (overall >= 50) rating = "Good";
-  else if (overall >= 25) rating = "Decent";
-  else rating = "Poor";
+  const words=lower.split(/\s+/).filter(x=>x.length>0);
+  const wc=words.length;
+  let lengthScore=0;
+  if(wc>=6 && wc<=12) lengthScore=20;
+  else if(wc>=4 && wc<=15) lengthScore=12;
+  else lengthScore=4;
 
-  /* ----------------------------------------------------------
-     6. Output
-  ---------------------------------------------------------- */
-  document.getElementById("results").innerHTML = `
+  const raw=emotionalScore+urgencyScore+simplicityScore+trustScore+powerScore+lengthScore;
+  const overall=Math.round((raw/120)*100);
+
+  let rating="";
+  if(overall>=80) rating="Outstanding";
+  else if(overall>=70) rating="Great";
+  else if(overall>=50) rating="Good";
+  else if(overall>=25) rating="Decent";
+  else rating="Poor";
+
+  document.getElementById("results").innerHTML=`
     <div class="score">${overall}</div>
     <div class="score-bar-container">
-      <div class="score-bar" id="scoreFill"></div>
+      <div class="score-bar" id="bar"></div>
     </div>
     <div class="rating-label">${rating}</div>
-
-    <div class="cat-score"><strong>Length:</strong> ${wordCount} words</div>
+    <div class="cat-score"><strong>Length:</strong> ${wc} words</div>
     <div class="cat-score"><strong>Emotional:</strong> ${emotionalScore}/20</div>
     <div class="cat-score"><strong>Urgency:</strong> ${urgencyScore}/20</div>
     <div class="cat-score"><strong>Simplicity:</strong> ${simplicityScore}/20</div>
     <div class="cat-score"><strong>Trust:</strong> ${trustScore}/20</div>
     <div class="cat-score"><strong>Power:</strong> ${powerScore}/20</div>
+    <div class="cat-score"><strong>Highlighted:</strong> ${highlightKeywords(headline)}</div>
   `;
-
-  // Smooth animation
-  setTimeout(() => {
-    document.getElementById("scoreFill").style.width = overall + "%";
-  }, 50);
+  setTimeout(()=>{document.getElementById("bar").style.width=overall+"%";},50);
 }
 </script>
-
 </body>
 </html>
