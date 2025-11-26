@@ -15,8 +15,8 @@ body {
 }
 
 .container {
-  max-width: 600px;
-  margin: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .glass-card {
@@ -35,15 +35,16 @@ h1 {
 
 textarea {
   width: 100%;
-  padding: 14px;
-  border-radius: 12px;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 16px;
   border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px);
   font-size: 1rem;
-  background: rgba(255,255,255,0.08);
   color: #fff;
   resize: none;
-  outline: none;
-  backdrop-filter: blur(10px);
 }
 
 button {
