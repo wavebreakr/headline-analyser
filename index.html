@@ -1,247 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Headline Analyzer</title>
 
 <style>
-  :root {
-    --glass-bg: rgba(255, 255, 255, 0.18);
-    --glass-border: rgba(255, 255, 255, 0.35);
-    --glass-shadow: rgba(0, 0, 0, 0.15);
-    --blur-amount: 20px;
-  }
+/* -- MOBILE-FIRST LIQUID GLASS UI -- */
 
-  body {
-    margin: 0;
-    padding: 20px;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, #eceff4, #e3e8ef);
-    color: #111;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  background: #0a0a0a;
+  margin: 0;
+  padding: 20px;
+  color: #fff;
+}
 
-  h1 {
-    margin-bottom: 14px;
-    font-size: 1.8rem;
-    text-align: center;
-  }
+.container {
+  max-width: 600px;
+  margin: auto;
+}
 
-  .glass-box {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(var(--blur-amount));
-    -webkit-backdrop-filter: blur(var(--blur-amount));
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 8px 25px var(--glass-shadow);
-    margin-bottom: 20px;
-  }
+.glass-card {
+  background: rgba(255,255,255,0.12);
+  border-radius: 18px;
+  padding: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 0 30px rgba(255,255,255,0.09);
+}
 
-  textarea {
-    width: 100%;
-    padding: 14px;
-    font-size: 1rem;
-    background: rgba(255,255,255,0.45);
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.4);
-    outline: none;
-    resize: none;
-    min-height: 120px;
-  }
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
 
-  button {
-    width: 100%;
-    margin-top: 12px;
-    padding: 14px;
-    font-size: 1.1rem;
-    border-radius: 14px;
-    border: none;
-    background: rgba(255,255,255,0.35);
-    cursor: pointer;
-    font-weight: 600;
-    transition: 0.2s;
-  }
-  button:hover {
-    background: rgba(255,255,255,0.55);
-  }
+textarea {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-size: 1rem;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  resize: none;
+  outline: none;
+  backdrop-filter: blur(10px);
+}
 
-  .score {
-    font-size: 2.6rem;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 6px;
-  }
+button {
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px;
+  background: linear-gradient(135deg, #4dcaff, #0091ff);
+  border: none;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #000;
+  cursor: pointer;
+}
 
-  .score-bar-container,
-  .cat-bar-container {
-    width: 100%;
-    height: 14px;
-    background: rgba(255,255,255,0.25);
-    border-radius: 10px;
-    overflow: hidden;
-    margin: 10px 0 16px;
-    backdrop-filter: blur(10px);
-  }
+/* SCORE BAR */
+.score {
+  text-align: center;
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin-top: 18px;
+}
 
-  .score-bar,
-  .cat-bar {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #7dd3fc, #38bdf8);
-    transition: width 1.2s ease;
-  }
+.rating-label {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 1.1rem;
+  opacity: 0.85;
+}
 
-  .cat-score-row {
-    margin-bottom: 18px;
-  }
+.score-bar-container {
+  width: 100%;
+  height: 14px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 12px;
+  backdrop-filter: blur(10px);
+}
 
-  .cat-label {
-    font-size: 0.9rem;
-    margin-bottom: 4px;
-    display: flex;
-    justify-content: space-between;
-  }
+.score-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #7dd3fc, #38bdf8);
+  transition: width 1.2s ease;
+}
 
-  @media (min-width: 650px) {
-    body { padding: 40px; }
-    h1 { font-size: 2.2rem; }
-  }
+/* Category scores */
+.cat-score {
+  font-size: 0.95rem;
+  opacity: 0.85;
+  margin-top: 6px;
+}
 </style>
 </head>
 
 <body>
+<div class="container">
   <h1>Headline Analyzer</h1>
 
-  <div class="glass-box">
-    <textarea id="headline" placeholder="Paste your headline…"></textarea>
+  <div class="glass-card">
+    <textarea id="headline" rows="3" placeholder="Type your headline..."></textarea>
     <button onclick="analyze()">Analyze</button>
-  </div>
 
-  <div id="results" class="glass-box" style="display:none;"></div>
+    <div id="results"></div>
+  </div>
+</div>
 
 <script>
-  /* -------------------------
-     👍 WORD LISTS (50 each)
-     ------------------------- */
+/* ----------------------------------------------------------
+   WORD BANKS (placeholders — swap your real 50-word lists)
+---------------------------------------------------------- */
+const emotionalWords = ["love","fear","secrets","magic","dream","wild","shock","amazing"];
+const urgencyWords = ["now","today","instantly","hurry","quick","fast","urgent","don't wait"];
+const simplicityWords = ["easy","simple","basic","clear","quickly","guide","steps","how to"];
+const trustWords = ["proven","research","expert","trusted","verified","real","authentic","official"];
+const powerWords = ["unlock","boost","win","master","dominate","crush","supercharge","explode"];
 
-  const emotional = [
-    "amazing","heartfelt","inspiring","shocking","incredible","fearless","tragic","uplifting","bold","brave",
-    "moving","unforgettable","powerful","tender","raw","surprising","joyful","heartbreaking","delightful","intense",
-    "gripping","dramatic","comforting","calming","astonishing","stirring","lovable","excited","relieved","anxious",
-    "hopeful","outraged","thrilled","frustrated","mesmerising","grateful","nervous","curious","daring","passionate",
-    "stunned","proud","furious","enchanted","eager","determined","awestruck","relieved"
-  ];
+/* ----------------------------------------------------------
+   NEW BALANCED SCORING SYSTEM
+---------------------------------------------------------- */
 
-  const urgency = [
-    "now","today","instantly","quick","urgent","hurry","act","start","stop","boost",
-    "unlock","fix","launch","grab","claim","speed","accelerate","upgrade","improve","push",
-    "snap","break","power","surge","transform","ignite","activate","ramp","spark","trigger",
-    "win","save","slash","double","triple","jumpstart","escalate","secure","optimise","streamline",
-    "charge","rush","achieve","deliver","maximise","deploy","implement","accelerate"
-  ];
+function analyze() {
+  const text = document.getElementById("headline").value.toLowerCase().trim();
+  if (!text) return;
 
-  const clarity = [
-    "easy","simple","clear","basic","plain","clean","direct","quick","essential","core",
-    "guide","how","steps","checklist","summary","overview","beginner","start","template","blueprint",
-    "method","system","framework","shortcut","formula","structure","map","outline","breakdown","fundamentals",
-    "intro","essentials","walk-through","sample","example","baseline","demo","basics","key","principle",
-    "approach","concept","model","pattern","methodical","straightforward","overview"
-  ];
-
-  const trust = [
-    "proven","research","expert","verified","tested","data","stats","official","reliable","validated",
-    "backed","confirmed","trusted","certified","measured","documented","scientific","peer-reviewed","accurate","credible",
-    "factual","benchmarked","established","authority","legitimate","endorsed","demonstrated","quantified","authentic","reputable",
-    "consistent","dependable","supported","empirical","guaranteed","audited","vetted","sourced","analysed","reviewed",
-    "evidence-based","precision","transparent","trustworthy","confirmed"
-  ];
-
-  const power = [
-    "unstoppable","ultimate","epic","dominant","massive","huge","giant","explosive","breakthrough","legendary",
-    "supreme","elite","fierce","powerhouse","monumental","colossal","dynamic","titan","formidable","game-changing",
-    "turbocharged","unmatched","unrivaled","mega","hyper","extreme","supercharged","maximum","peak","prime",
-    "apex","surge","thunder","blaze","force","impact","smash","crush","conquer","elevate",
-    "amplify","expand","skyrocket","dominate","boost","explode"
-  ];
-
-  /* -------------------------
-     👍 SCORING FUNCTION
-     ------------------------- */
-
-  function scoreCategory(list, words) {
-    let hits = 0;
-    for (const w of words) {
-      if (list.includes(w)) hits++;
-    }
-    return Math.round((hits / list.length) * 100);
+  /* 1. Count matches */
+  function countMatches(list) {
+    let count = 0;
+    for (let w of list) if (text.includes(w)) count++;
+    return count;
   }
 
-  /* -------------------------
-     👍 MAIN ANALYSIS
-     ------------------------- */
+  const emotional = countMatches(emotionalWords);
+  const urgency = countMatches(urgencyWords);
+  const simplicity = countMatches(simplicityWords);
+  const trust = countMatches(trustWords);
+  const power = countMatches(powerWords);
 
-  function analyze() {
-    const text = document.getElementById("headline").value.toLowerCase().trim();
-    if (!text) return;
+  /* 2. Score per category (max 20, each match = 12 pts) */
+  function scoreCat(x) { return Math.min(x * 12, 20); }
 
-    const words = text.split(/[^a-zA-Z]+/).filter(Boolean);
+  const emotionalScore = scoreCat(emotional);
+  const urgencyScore = scoreCat(urgency);
+  const simplicityScore = scoreCat(simplicity);
+  const trustScore = scoreCat(trust);
+  const powerScore = scoreCat(power);
 
-    const sEmo = scoreCategory(emotional, words);
-    const sUrg = scoreCategory(urgency, words);
-    const sCla = scoreCategory(clarity, words);
-    const sTru = scoreCategory(trust, words);
-    const sPow = scoreCategory(power, words);
+  /* ----------------------------------------------------------
+     3. LENGTH SCORING (extra 0–20 points)
+     Best practice: 6–12 words is ideal for click-through
+  ---------------------------------------------------------- */
+  const words = text.split(/\s+/).filter(x => x.length > 0);
+  const wordCount = words.length;
 
-    const overall = Math.round((sEmo + sUrg + sCla + sTru + sPow) / 5);
-
-    const results = document.getElementById("results");
-    results.style.display = "block";
-
-    results.innerHTML = `
-      <div class="score">${overall}/100</div>
-      <div class="score-bar-container">
-        <div class="score-bar" id="overallBar"></div>
-      </div>
-
-      ${categoryRow("Emotional", sEmo, "emoBar")}
-      ${categoryRow("Urgency", sUrg, "urgBar")}
-      ${categoryRow("Simplicity", sCla, "claBar")}
-      ${categoryRow("Trust", sTru, "truBar")}
-      ${categoryRow("Power", sPow, "powBar")}
-    `;
-
-    // animate all bars
-    setTimeout(() => {
-      document.getElementById("overallBar").style.width = overall + "%";
-      document.getElementById("emoBar").style.width = sEmo + "%";
-      document.getElementById("urgBar").style.width = sUrg + "%";
-      document.getElementById("claBar").style.width = sCla + "%";
-      document.getElementById("truBar").style.width = sTru + "%";
-      document.getElementById("powBar").style.width = sPow + "%";
-    }, 80);
+  let lengthScore = 0;
+  if (wordCount >= 6 && wordCount <= 12) {
+    lengthScore = 20;            // perfect range
+  } else if (wordCount >= 4 && wordCount <= 15) {
+    lengthScore = 12;            // acceptable
+  } else {
+    lengthScore = 4;             // too short/long
   }
 
-  /* -------------------------
-     👍 Category block builder
-     ------------------------- */
+  /* ----------------------------------------------------------
+     4. Final score (max 120 → scaled down to 100)
+  ---------------------------------------------------------- */
+  const raw = emotionalScore + urgencyScore + simplicityScore + trustScore + powerScore + lengthScore;
+  const overall = Math.round((raw / 120) * 100);
 
-  function categoryRow(label, score, id) {
-    return `
-      <div class="cat-score-row">
-        <div class="cat-label">
-          <span>${label}</span>
-          <span>${score}</span>
-        </div>
-        <div class="cat-bar-container">
-          <div class="cat-bar" id="${id}"></div>
-        </div>
-      </div>
-    `;
-  }
+  /* ----------------------------------------------------------
+     5. Rating label
+  ---------------------------------------------------------- */
+  let rating = "";
+  if (overall >= 80) rating = "Outstanding";
+  else if (overall >= 70) rating = "Great";
+  else if (overall >= 50) rating = "Good";
+  else if (overall >= 25) rating = "Decent";
+  else rating = "Poor";
+
+  /* ----------------------------------------------------------
+     6. Output
+  ---------------------------------------------------------- */
+  document.getElementById("results").innerHTML = `
+    <div class="score">${overall}</div>
+    <div class="score-bar-container">
+      <div class="score-bar" id="scoreFill"></div>
+    </div>
+    <div class="rating-label">${rating}</div>
+
+    <div class="cat-score"><strong>Length:</strong> ${wordCount} words</div>
+    <div class="cat-score"><strong>Emotional:</strong> ${emotionalScore}/20</div>
+    <div class="cat-score"><strong>Urgency:</strong> ${urgencyScore}/20</div>
+    <div class="cat-score"><strong>Simplicity:</strong> ${simplicityScore}/20</div>
+    <div class="cat-score"><strong>Trust:</strong> ${trustScore}/20</div>
+    <div class="cat-score"><strong>Power:</strong> ${powerScore}/20</div>
+  `;
+
+  // Smooth animation
+  setTimeout(() => {
+    document.getElementById("scoreFill").style.width = overall + "%";
+  }, 50);
+}
 </script>
+
 </body>
 </html>
