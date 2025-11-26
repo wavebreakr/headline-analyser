@@ -1,168 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Headline Analyzer</title>
-
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Headline Analyzer — Monster-style scoring</title>
 <style>
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
-  background: #0a0a0a;
-  margin: 0;
-  padding: 20px;
-  color: #fff;
+/* Mobile-first Liquid Glass minimal UI */
+:root{
+  --bg1:#0a0a0a;
+  --glass-bg: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.12);
+  --glass-shadow: rgba(0,0,0,0.5);
+  --accent1: linear-gradient(90deg,#7dd3fc,#38bdf8);
 }
-
-.container {
-  width: 100%;
-  box-sizing: border-box;
+*{box-sizing:border-box}
+body{
+  margin:0;padding:20px;
+  font-family: -apple-system,BlinkMacSystemFont,"Inter",system-ui,Segoe UI,Roboto,Helvetica,Arial;
+  background: linear-gradient(135deg,#071017,#0c1220);
+  color:#fff;
+  min-height:100vh;
+  display:flex;align-items:flex-start;justify-content:center;
 }
-
-.glass-card {
-  background: rgba(255,255,255,0.12);
-  border-radius: 18px;
-  padding: 20px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 0 30px rgba(255,255,255,0.09);
+.container{width:100%;max-width:720px}
+.glass {
+  background:var(--glass-bg);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  padding:18px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+  margin-bottom:16px;
 }
-
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-  font-weight: 600;
+h1{
+  margin:0 0 12px 0;font-size:20px;text-align:center;font-weight:600;
 }
-
-textarea {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  padding: 16px;
-  border: none;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px);
-  font-size: 1rem;
-  color: #fff;
-  resize: none;
+textarea{
+  width:100%;max-width:100%;
+  padding:12px;border-radius:12px;border:none;
+  background: rgba(255,255,255,0.04); color:#fff;
+  resize:none; font-size:15px; line-height:1.3;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
 }
-
-button {
-  width: 100%;
-  margin-top: 16px;
-  padding: 14px;
-  background: linear-gradient(135deg, #4dcaff, #0091ff);
-  border: none;
-  border-radius: 12px;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #000;
-  cursor: pointer;
+.controls{display:flex;gap:12px;margin-top:12px}
+.btn{
+  flex:1;padding:12px;border-radius:12px;border:none;font-weight:700;
+  cursor:pointer;background: linear-gradient(135deg,#4dcaff,#0091ff); color:#021;
 }
-
-.score {
-  text-align: center;
-  font-size: 2.4rem;
-  font-weight: 700;
-  margin-top: 18px;
+.small{padding:8px;font-size:14px}
+.results { margin-top:14px; }
+.score { text-align:center; font-size:34px; font-weight:800; margin-top:6px; }
+.rating { text-align:center; opacity:0.9; margin-top:6px; font-weight:600 }
+.score-bar-container { width:100%; height:14px; background:rgba(255,255,255,0.06); border-radius:10px; overflow:hidden; margin-top:12px; }
+.score-bar { height:100%; width:0; background:var(--accent1); transition:width 900ms cubic-bezier(.2,.9,.2,1); }
+.meta { margin-top:12px; font-size:14px; color:rgba(255,255,255,0.85); }
+.row { display:flex; justify-content:space-between; margin-top:8px; align-items:center; }
+.cat { font-size:13px; opacity:0.9; }
+.legend { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; justify-content:center; }
+.legend span{padding:6px 8px;border-radius:8px;font-weight:700;font-size:13px}
+.highlight-emotional{background: rgba(255,60,120,0.18); color: #fff; padding:2px 4px; border-radius:6px}
+.highlight-urgency{background: rgba(255,143,0,0.14); color:#fff; padding:2px 4px; border-radius:6px}
+.highlight-simplicity{background: rgba(0,205,255,0.10); color:#fff; padding:2px 4px; border-radius:6px}
+.highlight-trust{background: rgba(0,220,130,0.10); color:#fff; padding:2px 4px; border-radius:6px}
+.highlight-power{background: rgba(150,80,255,0.12); color:#fff; padding:2px 4px; border-radius:6px}
+.highlighted-headline{display:block;margin-top:12px;font-weight:700;line-height:1.35}
+.small-note{font-size:13px;opacity:0.8;margin-top:8px;text-align:center}
+@media(min-width:900px){
+  .controls{max-width:600px;margin:0 auto}
+  h1{font-size:24px}
+  .score{font-size:44px}
 }
-
-.rating-label {
-  text-align: center;
-  margin-top: 8px;
-  font-size: 1.1rem;
-  opacity: 0.85;
-}
-
-.score-bar-container {
-  width: 100%;
-  height: 14px;
-  background: rgba(255,255,255,0.25);
-  border-radius: 12px;
-  overflow: hidden;
-  margin-top: 12px;
-  backdrop-filter: blur(10px);
-}
-
-.score-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #7dd3fc, #38bdf8);
-  transition: width 1.2s ease;
-}
-
-.cat-score {
-  font-size: 0.95rem;
-  opacity: 0.85;
-  margin-top: 6px;
-}
-
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  margin-top: 16px;
-  font-size: 0.95rem;
-}
-
-.legend span {
-  margin: 4px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: 600;
-}
-
-.highlight-emotional { background: rgba(255,0,128,0.3); }
-.highlight-urgency    { background: rgba(255,128,0,0.3); }
-.highlight-simplicity { background: rgba(0,255,255,0.3); }
-.highlight-trust      { background: rgba(0,255,128,0.3); }
-.highlight-power      { background: rgba(128,0,255,0.3); }
 </style>
 </head>
 <body>
-<div class="container">
-<h1>Headline Analyzer</h1>
-<div class="glass-card">
-  <textarea id="headline" rows="3" placeholder="Type your headline..."></textarea>
-  <button onclick="analyze()">Analyze</button>
+  <div class="container">
+    <div class="glass">
+      <h1>Headline Analyzer — Monster-style scoring</h1>
+      <textarea id="headline" rows="3" placeholder="Type or paste your headline here..."></textarea>
+      <div class="controls">
+        <button class="btn" id="analyzeBtn">Analyze</button>
+        <button class="btn small" id="clearBtn" style="background:rgba(255,255,255,0.06);color:#fff">Clear</button>
+      </div>
 
-  <div id="results"></div>
+      <div id="results" class="results" aria-live="polite"></div>
 
-  <div class="legend">
-    <span class="highlight-emotional">Emotional</span>
-    <span class="highlight-urgency">Urgency</span>
-    <span class="highlight-simplicity">Simplicity</span>
-    <span class="highlight-trust">Trust</span>
-    <span class="highlight-power">Power</span>
+      <div class="legend" aria-hidden="false">
+        <span class="highlight-emotional">Emotional</span>
+        <span class="highlight-urgency">Urgency</span>
+        <span class="highlight-simplicity">Simplicity</span>
+        <span class="highlight-trust">Trust</span>
+        <span class="highlight-power">Power</span>
+      </div>
+
+      <div class="small-note">Scoring blends keyword signals, headline length & structure, sentiment, clarity and word balance — tuned to feel like professional headline analyzers.</div>
+    </div>
   </div>
-</div>
-</div>
 
 <script>
-// ------------------ FULL 500 WORDS ------------------
-// Emotional (100)
-const emotionalWords = ["amazing","astonishing","awe","beautiful","beloved","bliss","breathtaking","brilliant","captivating","charming",
+/* ---------------------------
+   FULL 5×100 WORD LISTS (lowercase)
+   (All 500 words embedded)
+   --------------------------- */
+
+/* EMOTIONAL (100) */
+const emotionalWords = [
+"amazing","astonishing","awe","beautiful","beloved","bliss","breathtaking","brilliant","captivating","charming",
 "comfort","compelling","courage","crave","delight","desire","dream","ecstatic","elevate","embrace","empower","enchant","energize","epic",
 "euphoria","excited","extraordinary","fascinating","fearless","fiery","flourish","forgive","grateful","gripping","happy","heartfelt",
 "heroic","hope","incredible","inspire","intense","joy","joyful","lift","love","lovely","magical","mesmerizing","mind-blowing","miracle",
 "momentum","moving","mystical","overjoyed","passion","powerful","radiant","relief","remarkable","revive","romantic","satisfy","sensational",
 "soulful","soothing","spark","special","spellbinding","spirited","stirring","stunning","surprising","sweet","thrilled","touching","transform",
-"trusting","unforgettable","united","uplift","urgent-feel","valiant","valuable","vibrant","victorious","vivid","warm","wonder","wonderful",
-"wow","yearning","zeal","devotion","ecstatic","fear","shocking","shatter","smile","tender","undaunted","unstoppable"];
+"trusting","unforgettable","united","uplift","valiant","valuable","vibrant","victorious","vivid","warm","wonder","wonderful","wow",
+"yearning","zeal","devotion","delighted","blessed","engaging","tender","undaunted","bold","undauntedly","stirred","awed","moved","emotion"
+];
 
-// Urgency (100)
-const urgencyWords = ["act now","alert","almost gone","before it’s too late","breaking","brief","can’t wait","crucial","deadline","don’t delay",
-"don’t miss","end soon","expires","final","flash","faster","fast","few left","go now","hurry","immediately","instant","instantly","last call",
+/* URGENCY (100) */
+const urgencyWords = [
+"act now","alert","almost gone","before it's too late","breaking","brief","can't wait","crucial","deadline","don't delay",
+"don't miss","end soon","expires","final","flash","faster","fast","few left","go now","hurry","immediately","instant","instantly","last call",
 "last chance","limited","limited time","limited spots","must act","must-see","now","now only","only today","only hours","urgent","priority",
-"quick","quickly","rapid","right away","rush","seconds left","soon","stop waiting","swift","take action","time-sensitive","time’s running out",
+"quick","quickly","rapid","right away","rush","seconds left","soon","stop waiting","swift","take action","time-sensitive","time's running out",
 "today","tonight","urgent alert","urgent notice","warning","while available","while you can","window closing","act fast","asap","be quick",
-"beat the clock","before midnight","final notice","ending soon","critical","time-limited","don’t miss out","flash sale","hot now","immediate",
+"beat the clock","before midnight","final notice","ending soon","critical","time-limited","don't miss out","flash sale","hot now","immediate",
 "jump in","last moment","limited offer","limited edition","low stock","move now","nearing end","now live","now open","running out","secure now",
 "sell out","selling fast","slots filling","snap up","starting now","take advantage","take now","time crunch","urgent today","vanishing",
-"while stocks last","just released","now released","right now","zero delay","ending today","today only"];
+"while stocks last","just released","now released","right now","zero delay","ending today","today only","act quickly","act fast now","on sale now",
+"closing soon","final hours","time-limited offer","limited availability","running low","last few"
+];
 
-// Simplicity (100)
-const simplicityWords = ["easy","simple","clear","basic","beginner","plain","quick","step-by-step","how to","guide","breakdown","explain",
+/* SIMPLICITY / CLARITY (100) */
+const simplicityWords = [
+"easy","simple","clear","basic","beginner","plain","quick","step-by-step","how to","guide","breakdown","explain",
 "overview","straightforward","shortcut","easy win","no-fuss","clean","minimal","essentials","fundamentals","starter","simple steps",
 "walkthrough","formula","blueprint","checklist","cheat sheet","template","framework","fast track","simple guide","quick guide","no jargon",
 "clarity","simplify","instantly clear","idiot-proof","plug-and-play","direct","quick start","learn fast","no complexity","cut through","strip back",
@@ -171,10 +140,12 @@ const simplicityWords = ["easy","simple","clear","basic","beginner","plain","qui
 "simple process","clearer","cleaner","start here","start now","core steps","just follow","no confusion","quick explanation","simple overview",
 "fast explanation","easy mode","easy path","easy way","straight path","step one","step two","no-frills","easy answer","simple answer",
 "no learning curve","clear results","quick results","simple results","direct steps","easy as pie","simple as that","you can do this","no effort",
-"effortless","totally clear"];
+"effortless","totally clear","howto","stepwise","concise","digestible","readable","plainspoken","user-friendly","short"
+];
 
-// Trust (100)
-const trustWords = ["proven","verified","expert","research-backed","trusted","authentic","certified","official","evidence","data","data-driven",
+/* TRUST / CREDIBILITY (100) */
+const trustWords = [
+"proven","verified","expert","research-backed","trusted","authentic","certified","official","evidence","data","data-driven",
 "peer-reviewed","authority","credible","confirmed","tested","validated","reliable","results","accurate","track record","transparent","honest",
 "genuine","no-nonsense","real-world","documented","endorsed","professional","scientific","science-based","well-known","reputable",
 "trusted by many","community-approved","reviewed","vetted","guarantee","guaranteed","warranty","secure","safe","risk-free","backed",
@@ -183,81 +154,272 @@ const trustWords = ["proven","verified","expert","research-backed","trusted","au
 "authoritative","trustworthy","validated results","compliance","credible source","established","professional-grade","third-party tested",
 "high quality","best practice","legit","real data","trusted source","ethically sourced","no hidden agenda","verified results","pro insight",
 "pro tip","field-tested","battle-tested","official guide","official results","evidence-based","real proof","trusted team","industry-tested",
-"proven strategy","well-tested","solid proof","pro-standard","legitimate","fully verified","pro-approved","scientifically proven","trusted insights"];
+"proven strategy","well-tested","solid proof","pro-standard","legitimate","fully verified","pro-approved","scientifically proven","trusted insights"
+];
 
-// Power (100)
-const powerWords = ["unlock","boost","explode","dominate","ignite","amplify","supercharge","transform","elevate","maximize","crush","breakthrough",
+/* POWER / IMPACT (100) */
+const powerWords = [
+"unlock","boost","explode","dominate","ignite","amplify","supercharge","transform","elevate","maximize","crush","breakthrough",
 "revolutionize","accelerate","power up","skyrocket","unleash","charge","surge","jumpstart","turbocharge","win","master","conquer","level up",
-"upgrade","intensify","crank up","fuel","hypercharge","turbo","attack","dominate now","game-changing","force","impact","blast","launch","trigger",
+"upgrade","intensify","crank up","fuel","hypercharge","turbo","attack","game-changing","force","impact","blast","launch","trigger",
 "shockwave","epic","massive","unstoppable","mega","prime","hyper","elite","ultimate","radical","optimize","overpower","obliterate","decimate",
-"ramp up","smash","hammer","expand","amplify","break limits","break free","catapult","rocket","hit harder","go big","unbreakable","increase",
-"drive","push","excel","excel now","take over","advance","charge ahead","surpass","command","rule","defy","disrupt","innovate","forceful",
+"ramp up","smash","hammer","expand","break limits","break free","catapult","rocket","hit harder","go big","unbreakable","increase",
+"drive","push","excel","take over","advance","charge ahead","surpass","command","rule","defy","disrupt","innovate","forceful",
 "dominate fast","upgrade fast","power boost","complete control","pure power","energy boost","shatter","storm","surge forward","power move",
-"prime move","epic win","superpower","ultimate edge","limitless","dominate everything","super elevate","explode results","peak performance"];
+"prime move","epic win","superpower","ultimate edge","limitless","dominate everything","super elevate","explode results","peak performance","boosts"
+];
 
-// ------------------ REGEX ------------------
-const emotionalRegex = new RegExp("\\b("+emotionalWords.join("|")+")\\b","gi");
-const urgencyRegex   = new RegExp("\\b("+urgencyWords.join("|")+")\\b","gi");
-const simplicityRegex= new RegExp("\\b("+simplicityWords.join("|")+")\\b","gi");
-const trustRegex     = new RegExp("\\b("+trustWords.join("|")+")\\b","gi");
-const powerRegex     = new RegExp("\\b("+powerWords.join("|")+")\\b","gi");
+/* POSITIVE / NEGATIVE sentiment words (small lists to detect sentiment) */
+const positiveSentiment = ["success","win","wins","boost","gain","growth","improve","improving","improvement","benefit","benefits","profit","easy","free","best","amazing","incredible","love","thrilled","excited"];
+const negativeSentiment = ["mistake","mistakes","fail","fails","failure","problems","problem","avoid","stop","don’t","don't","can't","never","worst","danger","risk","risks","warning","scam","lost","losing"];
 
-// ------------------ ANALYSIS ------------------
-function highlightKeywords(text){
-  text=text.replace(emotionalRegex,'<span class="highlight-emotional">$&</span>');
-  text=text.replace(urgencyRegex,'<span class="highlight-urgency">$&</span>');
-  text=text.replace(simplicityRegex,'<span class="highlight-simplicity">$&</span>');
-  text=text.replace(trustRegex,'<span class="highlight-trust">$&</span>');
-  text=text.replace(powerRegex,'<span class="highlight-power">$&</span>');
-  return text;
+/* COMMON / UNCOMMON words for ratio checks */
+const commonWords = ["the","a","an","and","or","but","for","with","to","of","in","on","at","your","you","get","how","why","free","new","top","best","learn","use","this","that","now","today","easy","step","steps","guide","video","series","course","tips","tricks","ways","method"];
+// We'll treat "uncommon" as words that exist in power + emotional lists (rough heuristic)
+const uncommonSet = new Set([...powerWords, ...emotionalWords, ...trustWords].map(w=>w.toLowerCase()));
+
+/* Build regex for fast matching (word boundaries) */
+function escapeForRegex(s){
+  return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+}
+const makeRegex = (arr) => new RegExp("\\b(" + arr.map(escapeForRegex).join("|") + ")\\b","gi");
+
+const emotionalRegex = makeRegex(emotionalWords);
+const urgencyRegex   = makeRegex(urgencyWords);
+const simplicityRegex= makeRegex(simplicityWords);
+const trustRegex     = makeRegex(trustWords);
+const powerRegex     = makeRegex(powerWords);
+const positiveRegex  = makeRegex(positiveSentiment);
+const negativeRegex  = makeRegex(negativeSentiment);
+const commonRegex    = makeRegex(commonWords);
+
+/* ---------------------------
+   SCORING POLICY (Monster-like)
+   ---------------------------
+   Components (caps):
+   - Length & format: up to 25
+   - Structure bonuses (openers/colon/format/exclaim): up to 15
+   - Keyword matches: up to 25
+   - Sentiment: up to 10
+   - Clarity / benefit detection: up to 15
+   - Distribution bonus (common/uncommon/emotional/power mix): up to 10
+   - Skimmability penalty: up to -15
+   - Short headline penalty: -20 or -10 (applied before clamp)
+   Final raw sum clamped to 0-100.
+*/
+
+/* Helpers */
+function countMatchesLower(text, regex){
+  return (text.match(regex) || []).length;
+}
+function countUniqueMatchesLower(text, regex){
+  const m = text.match(regex) || [];
+  return Array.from(new Set(m.map(x=>x.toLowerCase()))).length;
+}
+function startsWithOpener(text){
+  // Common good openers
+  const openers = ["free","how","why","new","discover","unlock","get","learn","introducing","meet"];
+  const first = text.trim().split(/\s+/)[0] || "";
+  return openers.includes(first.toLowerCase());
+}
+function containsBenefitPattern(text){
+  // pattern "X: Y" or "X - Y" where Y contains benefit-ish words
+  const parts = text.split(/[:\u2013\u2014-]/).map(s=>s.trim());
+  if(parts.length>=2){
+    const after = parts.slice(1).join(" ");
+    const benefitWords = ["success","save","boost","learn","fast","improve","increase","grow","profit","results","gain"];
+    for(let b of benefitWords) if(new RegExp("\\b"+escapeForRegex(b)+"\\b","i").test(after)) return true;
+  }
+  return false;
+}
+function hasPunctuationExclaim(text){ return /!$/.test(text.trim()); }
+function longWordCount(text){ return (text.split(/\s+/).filter(w=>w.length>12)).length; }
+function complexWordCount(text){ return (text.split(/\s+/).filter(w=>w.length>7)).length; }
+function pct(num, denom){ return denom===0?0: (num/denom)*100; }
+
+/* Main scoring function */
+function scoreHeadline(text){
+  const rawText = String(text || "").trim();
+  const lower = rawText.toLowerCase();
+
+  // word counts
+  const words = lower.split(/\s+/).filter(Boolean);
+  const wc = words.length;
+
+  // keyword matches (unique matches)
+  const emoMatches = countUniqueMatchesLower(lower, emotionalRegex);
+  const urgMatches = countUniqueMatchesLower(lower, urgencyRegex);
+  const simMatches = countUniqueMatchesLower(lower, simplicityRegex);
+  const truMatches = countUniqueMatchesLower(lower, trustRegex);
+  const powMatches = countUniqueMatchesLower(lower, powerRegex);
+
+  const totalKeywordMatches = emoMatches + urgMatches + simMatches + truMatches + powMatches;
+
+  // Keyword score: each unique match ~ 4 points, capped at 25
+  const keywordScore = Math.min(totalKeywordMatches * 4.5, 25);
+
+  // Length & format (up to 25)
+  let lengthScore = 0;
+  if(wc >=7 && wc <=12) lengthScore = 25;
+  else if(wc >=4 && wc <=6) lengthScore = 15;
+  else if(wc >=13 && wc <=16) lengthScore = 18;
+  else if(wc >=17 && wc <=24) lengthScore = 10;
+  else lengthScore = 5;
+
+  // Structure bonuses (openers, colon/dash pattern, exclaim)
+  let structureScore = 0;
+  if(startsWithOpener(rawText)) structureScore += 6; // opener bonus
+  if(/[:\u2013\u2014-]/.test(rawText)) structureScore += 4; // punctuation indicates structure
+  if(containsBenefitPattern(rawText)) structureScore += 6; // thing:benefit pattern
+  if(hasPunctuationExclaim(rawText)) structureScore += 2;
+  structureScore = Math.min(structureScore, 15);
+
+  // Sentiment (positive preferred; negative also useful)
+  const posMatches = countMatchesLower(lower, positiveRegex);
+  const negMatches = countMatchesLower(lower, negativeRegex);
+  let sentimentScore = 0;
+  if(posMatches > 0) sentimentScore = 10;
+  else if(negMatches > 0) sentimentScore = 8;
+  else sentimentScore = 0;
+
+  // Clarity / benefit detection (up to 15)
+  // heuristics: presence of benefit words, presence of clear noun + verb
+  const benefitWords = ["success","boost","save","learn","gain","improve","increase","growth","profit","results","better","fast","speed","upgrade"];
+  let clarityScore = 0;
+  for(let b of benefitWords) if(new RegExp("\\b"+escapeForRegex(b)+"\\b","i").test(lower)) clarityScore += 3;
+  // if contains colon + benefit, give extra
+  if(containsBenefitPattern(rawText)) clarityScore += 4;
+  clarityScore = Math.min(clarityScore, 15);
+
+  // Distribution / balance (common vs uncommon vs emotional/power) up to 10
+  const commonCount = countMatchesLower(lower, commonRegex);
+  // uncommon approximated by unique matches in uncommonSet
+  const uncommonCount = words.filter(w=> uncommonSet.has(w)).length;
+  const emoCount = emoMatches;
+  const powCount = powMatches;
+
+  let distributionScore = 0;
+  const totalWords = Math.max(words.length,1);
+  const commonPct = pct(commonCount, totalWords);
+  const uncommonPct = pct(uncommonCount, totalWords);
+
+  // target: common 30-60% ; uncommon 5-25% ; emo 5-20% ; power 1-10%
+  if(commonPct >= 25 && commonPct <= 65) distributionScore += 4;
+  if(uncommonPct >= 3 && uncommonPct <= 25) distributionScore += 3;
+  if(emoCount >=1 && emoCount <= 6) distributionScore += 2;
+  if(powCount >=1 && powCount <= 3) distributionScore += 1;
+  distributionScore = Math.min(distributionScore, 10);
+
+  // Balance bonus: hits many categories
+  const categoriesHit = [emoMatches>0, urgMatches>0, simMatches>0, truMatches>0, powMatches>0].filter(Boolean).length;
+  let balanceBonus = 0;
+  if(categoriesHit >= 3) balanceBonus = 3;
+  if(categoriesHit >= 4) balanceBonus = 6;
+  if(categoriesHit === 5) balanceBonus = 10;
+
+  // Skimmability penalty: penalize long/complex words; up to -15
+  const longWords = longWordCount(rawText);
+  const complexWords = complexWordCount(rawText);
+  const skimmabilityPenalty = Math.min((longWords * 6) + Math.min(complexWords * 2, 12), 15);
+
+  // Short headline penalty
+  let shortPenalty = 0;
+  if(wc < 4) shortPenalty = 20;
+  else if(wc >=4 && wc <=5) shortPenalty = 10;
+
+  // Compose raw score from capped components
+  const rawSum = lengthScore    // up to 25
+               + structureScore // up to 15
+               + keywordScore   // up to 25
+               + sentimentScore // up to 10
+               + clarityScore   // up to 15
+               + distributionScore // up to 10
+               + balanceBonus; // up to 10 (but distributionScore cap ensures overall)
+  // Apply penalties
+  const penalized = rawSum - skimmabilityPenalty - shortPenalty;
+
+  // final clamp 0..100
+  let finalScore = Math.round(Math.max(0, Math.min(100, penalized)));
+  // Slight smoothing: if finalScore is 0 but there are keywords, nudge up
+  if(finalScore === 0 && totalKeywordMatches > 0) finalScore = Math.min(18, totalKeywordMatches * 3);
+
+  // Rating label
+  let label = "";
+  if(finalScore >= 80) label = "Outstanding";
+  else if(finalScore >= 70) label = "Great";
+  else if(finalScore >= 50) label = "Good";
+  else if(finalScore >= 25) label = "Decent";
+  else label = "Poor";
+
+  // Highlighted headline (color-code keywords)
+  let highlighted = rawText;
+  // Order of replace matters to avoid nested spans; do power/emotional/urgency/simplicity/trust
+  highlighted = highlighted.replace(powerRegex, '<span class="highlight-power">$&</span>');
+  highlighted = highlighted.replace(emotionalRegex, '<span class="highlight-emotional">$&</span>');
+  highlighted = highlighted.replace(urgencyRegex, '<span class="highlight-urgency">$&</span>');
+  highlighted = highlighted.replace(simplicityRegex, '<span class="highlight-simplicity">$&</span>');
+  highlighted = highlighted.replace(trustRegex, '<span class="highlight-trust">$&</span>');
+
+  return {
+    finalScore, label, wc, lengthScore, structureScore, keywordScore, sentimentScore, clarityScore,
+    distributionScore, balanceBonus, skimmabilityPenalty, shortPenalty, highlighted,
+    breakdown: { emotional: emoMatches, urgency: urgMatches, simplicity: simMatches, trust: truMatches, power: powMatches }
+  };
 }
 
-function analyze(){
-  const headline=document.getElementById("headline").value.trim();
-  if(!headline) return;
+/* UI interactions */
+const analyzeBtn = document.getElementById("analyzeBtn");
+const clearBtn = document.getElementById("clearBtn");
+const headlineEl = document.getElementById("headline");
+const resultsEl = document.getElementById("results");
 
-  const lower=headline.toLowerCase();
-  const countMatches=regex=> (lower.match(regex)||[]).length;
+function renderResult(res){
+  resultsEl.innerHTML = `
+    <div class="score">${res.finalScore}</div>
+    <div class="score-bar-container"><div class="score-bar" id="mainBar"></div></div>
+    <div class="rating">${res.label}</div>
 
-  const emotionalScore=Math.min(countMatches(emotionalRegex)*12,20);
-  const urgencyScore=Math.min(countMatches(urgencyRegex)*12,20);
-  const simplicityScore=Math.min(countMatches(simplicityRegex)*12,20);
-  const trustScore=Math.min(countMatches(trustRegex)*12,20);
-  const powerScore=Math.min(countMatches(powerRegex)*12,20);
-
-  const words=lower.split(/\s+/).filter(x=>x.length>0);
-  const wc=words.length;
-  let lengthScore=0;
-  if(wc>=6 && wc<=12) lengthScore=20;
-  else if(wc>=4 && wc<=15) lengthScore=12;
-  else lengthScore=4;
-
-  const raw=emotionalScore+urgencyScore+simplicityScore+trustScore+powerScore+lengthScore;
-  const overall=Math.round((raw/120)*100);
-
-  let rating="";
-  if(overall>=80) rating="Outstanding";
-  else if(overall>=70) rating="Great";
-  else if(overall>=50) rating="Good";
-  else if(overall>=25) rating="Decent";
-  else rating="Poor";
-
-  document.getElementById("results").innerHTML=`
-    <div class="score">${overall}</div>
-    <div class="score-bar-container">
-      <div class="score-bar" id="bar"></div>
+    <div class="meta">
+      <div class="row"><div class="cat">Length</div><div class="cat">${res.wc} words • ${res.lengthScore} pts</div></div>
+      <div class="row"><div class="cat">Structure</div><div class="cat">${res.structureScore} pts</div></div>
+      <div class="row"><div class="cat">Keywords</div><div class="cat">${res.keywordScore} pts</div></div>
+      <div class="row"><div class="cat">Sentiment</div><div class="cat">${res.sentimentScore} pts</div></div>
+      <div class="row"><div class="cat">Clarity</div><div class="cat">${res.clarityScore} pts</div></div>
+      <div class="row"><div class="cat">Distribution</div><div class="cat">${res.distributionScore} pts</div></div>
+      <div class="row"><div class="cat">Balance bonus</div><div class="cat">${res.balanceBonus} pts</div></div>
+      <div class="row"><div class="cat">Skimmability penalty</div><div class="cat">-${res.skimmabilityPenalty} pts</div></div>
+      <div class="row"><div class="cat">Short headline penalty</div><div class="cat">-${res.shortPenalty} pts</div></div>
     </div>
-    <div class="rating-label">${rating}</div>
-    <div class="cat-score"><strong>Length:</strong> ${wc} words</div>
-    <div class="cat-score"><strong>Emotional:</strong> ${emotionalScore}/20</div>
-    <div class="cat-score"><strong>Urgency:</strong> ${urgencyScore}/20</div>
-    <div class="cat-score"><strong>Simplicity:</strong> ${simplicityScore}/20</div>
-    <div class="cat-score"><strong>Trust:</strong> ${trustScore}/20</div>
-    <div class="cat-score"><strong>Power:</strong> ${powerScore}/20</div>
-    <div class="cat-score"><strong>Highlighted:</strong> ${highlightKeywords(headline)}</div>
+
+    <div class="highlighted-headline">${res.highlighted}</div>
   `;
-  setTimeout(()=>{document.getElementById("bar").style.width=overall+"%";},50);
+
+  // animate bar
+  setTimeout(()=> {
+    const bar = document.getElementById("mainBar");
+    if(bar) bar.style.width = res.finalScore + "%";
+  },60);
 }
+
+/* Events */
+analyzeBtn.addEventListener("click", ()=>{
+  const t = headlineEl.value.trim();
+  if(!t) return;
+  const res = scoreHeadline(t);
+  renderResult(res);
+});
+clearBtn.addEventListener("click", ()=>{
+  headlineEl.value = "";
+  resultsEl.innerHTML = "";
+  document.getElementById("mainBar")?.style && (document.getElementById("mainBar").style.width = "0%");
+});
+
+/* optional: analyze on Enter (when holding cmd/ctrl to avoid accidental) */
+headlineEl.addEventListener("keydown", (e)=>{
+  if((e.ctrlKey || e.metaKey) && e.key === "Enter"){
+    analyzeBtn.click();
+  }
+});
 </script>
 </body>
 </html>
