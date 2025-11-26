@@ -6,18 +6,11 @@
 <title>Headline Analyzer</title>
 
 <style>
-  /* ---------------------------
-     MOBILE-FIRST BASE
-     --------------------------- */
-
   :root {
     --glass-bg: rgba(255, 255, 255, 0.18);
     --glass-border: rgba(255, 255, 255, 0.35);
     --glass-shadow: rgba(0, 0, 0, 0.15);
     --blur-amount: 20px;
-
-    --text-dark: #111;
-    --text-light: #333;
   }
 
   body {
@@ -25,7 +18,7 @@
     padding: 20px;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     background: linear-gradient(135deg, #eceff4, #e3e8ef);
-    color: var(--text-dark);
+    color: #111;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -34,13 +27,8 @@
   h1 {
     margin-bottom: 14px;
     font-size: 1.8rem;
-    font-weight: 600;
     text-align: center;
   }
-
-  /* ---------------------------
-     LIQUID GLASS CONTAINER
-     --------------------------- */
 
   .glass-box {
     background: var(--glass-bg);
@@ -57,8 +45,7 @@
     width: 100%;
     padding: 14px;
     font-size: 1rem;
-    background: rgba(255, 255, 255, 0.45);
-    backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.45);
     border-radius: 14px;
     border: 1px solid rgba(255,255,255,0.4);
     outline: none;
@@ -74,49 +61,54 @@
     border-radius: 14px;
     border: none;
     background: rgba(255,255,255,0.35);
-    backdrop-filter: blur(10px);
     cursor: pointer;
     font-weight: 600;
     transition: 0.2s;
   }
-
   button:hover {
     background: rgba(255,255,255,0.55);
   }
 
-  #results {
-    margin-top: 20px;
-  }
-
   .score {
-    font-size: 2.4rem;
+    font-size: 2.6rem;
     font-weight: 700;
-    margin-bottom: 10px;
     text-align: center;
-  }
-
-  .cat-score {
     margin-bottom: 6px;
-    font-size: 0.95rem;
   }
 
-  /* ---------------------------
-     RESPONSIVE TWEAKS
-     --------------------------- */
+  .score-bar-container,
+  .cat-bar-container {
+    width: 100%;
+    height: 14px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 10px 0 16px;
+    backdrop-filter: blur(10px);
+  }
+
+  .score-bar,
+  .cat-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #7dd3fc, #38bdf8);
+    transition: width 1.2s ease;
+  }
+
+  .cat-score-row {
+    margin-bottom: 18px;
+  }
+
+  .cat-label {
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+  }
 
   @media (min-width: 650px) {
-    body {
-      padding: 40px;
-    }
-    h1 {
-      font-size: 2.2rem;
-    }
-    textarea {
-      font-size: 1.05rem;
-    }
-    .glass-box {
-      padding: 30px;
-    }
+    body { padding: 40px; }
+    h1 { font-size: 2.2rem; }
   }
 </style>
 </head>
@@ -132,7 +124,9 @@
   <div id="results" class="glass-box" style="display:none;"></div>
 
 <script>
-  /* WORD LISTS (50 each) */
+  /* -------------------------
+     👍 WORD LISTS (50 each)
+     ------------------------- */
 
   const emotional = [
     "amazing","heartfelt","inspiring","shocking","incredible","fearless","tragic","uplifting","bold","brave",
@@ -174,40 +168,78 @@
     "amplify","expand","skyrocket","dominate","boost","explode"
   ];
 
-  /* SCORING FUNCTION */
+  /* -------------------------
+     👍 SCORING FUNCTION
+     ------------------------- */
 
-  function scoreCategory(words, headlineWords) {
-    let count = 0;
-    for (const w of headlineWords) {
-      if (words.includes(w)) count++;
+  function scoreCategory(list, words) {
+    let hits = 0;
+    for (const w of words) {
+      if (list.includes(w)) hits++;
     }
-    return Math.round((count / words.length) * 100);
+    return Math.round((hits / list.length) * 100);
   }
+
+  /* -------------------------
+     👍 MAIN ANALYSIS
+     ------------------------- */
 
   function analyze() {
     const text = document.getElementById("headline").value.toLowerCase().trim();
     if (!text) return;
 
-    const headlineWords = text.split(/[^a-zA-Z]+/).filter(Boolean);
+    const words = text.split(/[^a-zA-Z]+/).filter(Boolean);
 
-    const emotionalScore = scoreCategory(emotional, headlineWords);
-    const urgencyScore = scoreCategory(urgency, headlineWords);
-    const clarityScore = scoreCategory(clarity, headlineWords);
-    const trustScore = scoreCategory(trust, headlineWords);
-    const powerScore = scoreCategory(power, headlineWords);
+    const sEmo = scoreCategory(emotional, words);
+    const sUrg = scoreCategory(urgency, words);
+    const sCla = scoreCategory(clarity, words);
+    const sTru = scoreCategory(trust, words);
+    const sPow = scoreCategory(power, words);
 
-    const overall = Math.round(
-      (emotionalScore + urgencyScore + clarityScore + trustScore + powerScore) / 5
-    );
+    const overall = Math.round((sEmo + sUrg + sCla + sTru + sPow) / 5);
 
-    document.getElementById("results").style.display = "block";
-    document.getElementById("results").innerHTML = `
+    const results = document.getElementById("results");
+    results.style.display = "block";
+
+    results.innerHTML = `
       <div class="score">${overall}/100</div>
-      <div class="cat-score"><strong>Emotional:</strong> ${emotionalScore}</div>
-      <div class="cat-score"><strong>Urgency:</strong> ${urgencyScore}</div>
-      <div class="cat-score"><strong>Simplicity:</strong> ${clarityScore}</div>
-      <div class="cat-score"><strong>Trust:</strong> ${trustScore}</div>
-      <div class="cat-score"><strong>Power:</strong> ${powerScore}</div>
+      <div class="score-bar-container">
+        <div class="score-bar" id="overallBar"></div>
+      </div>
+
+      ${categoryRow("Emotional", sEmo, "emoBar")}
+      ${categoryRow("Urgency", sUrg, "urgBar")}
+      ${categoryRow("Simplicity", sCla, "claBar")}
+      ${categoryRow("Trust", sTru, "truBar")}
+      ${categoryRow("Power", sPow, "powBar")}
+    `;
+
+    // animate all bars
+    setTimeout(() => {
+      document.getElementById("overallBar").style.width = overall + "%";
+      document.getElementById("emoBar").style.width = sEmo + "%";
+      document.getElementById("urgBar").style.width = sUrg + "%";
+      document.getElementById("claBar").style.width = sCla + "%";
+      document.getElementById("truBar").style.width = sTru + "%";
+      document.getElementById("powBar").style.width = sPow + "%";
+    }, 80);
+  }
+
+  /* -------------------------
+     👍 Category block builder
+     ------------------------- */
+
+  function categoryRow(label, score, id) {
+    return `
+      <div class="cat-score-row">
+        <div class="cat-label">
+          <span>${label}</span>
+          <span>${score}</span>
+        </div>
+        <div class="cat-bar-container">
+          <div class="cat-bar" id="${id}"></div>
+        </div>
+      </div>
     `;
   }
 </script>
