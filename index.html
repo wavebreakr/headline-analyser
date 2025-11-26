@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <title>Headline Analyzer</title>
   <style>
-    /* Basic reset */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f9f9f9;
@@ -17,7 +15,6 @@
       min-height: 100vh;
       padding: 20px;
     }
-
     .container {
       background: #fff;
       padding: 30px;
@@ -27,18 +24,8 @@
       width: 100%;
       text-align: center;
     }
-
-    h1 {
-      margin-bottom: 15px;
-      font-size: 2em;
-      color: #222;
-    }
-
-    p {
-      margin-bottom: 20px;
-      color: #555;
-    }
-
+    h1 { margin-bottom: 15px; font-size: 2em; color: #222; }
+    p { margin-bottom: 20px; color: #555; }
     input[type="text"] {
       width: 100%;
       padding: 12px;
@@ -47,36 +34,26 @@
       border-radius: 6px;
       margin-bottom: 15px;
     }
-
     button {
       padding: 12px 25px;
       font-size: 16px;
-      background: #4CAF50;
-      color: white;
+      margin: 5px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       transition: background 0.3s;
     }
-
-    button:hover {
-      background: #45a049;
-    }
-
-    #result {
-      margin-top: 25px;
-      font-size: 18px;
-      text-align: left;
-      word-wrap: break-word;
-    }
-
-    /* Highlight colors for word categories */
+    button#analyze { background: #4CAF50; color: white; }
+    button#analyze:hover { background: #45a049; }
+    button#reset { background: #f44336; color: white; }
+    button#reset:hover { background: #e53935; }
+    #result { margin-top: 25px; font-size: 18px; text-align: left; word-wrap: break-word; }
     .power { background-color: #fff176; font-weight: bold; }
     .emotional { background-color: #f28b82; font-weight: bold; }
     .curiosity { background-color: #81d4fa; font-weight: bold; }
     .numbers { background-color: #a5d6a7; font-weight: bold; }
     .action { background-color: #ce93d8; font-weight: bold; }
-
+    #history { margin-top: 20px; font-size: 14px; text-align: left; color: #555; }
     @media (max-width: 480px) {
       h1 { font-size: 1.5em; }
       button { width: 100%; margin-top: 10px; }
@@ -87,21 +64,23 @@
 
 <div class="container">
   <h1>Headline Analyzer</h1>
-  <p>Paste your headline and click Analyze to see its score and highlighted words.</p>
+  <p>Paste your headline and click Analyze to see its score, highlighted words, hints, and history.</p>
 
   <input type="text" id="headlineInput" placeholder="Type your headline here" />
-  <button onclick="analyzeHeadline()">Analyze</button>
+  <button id="analyze" onclick="analyzeHeadline()">Analyze</button>
+  <button id="reset" onclick="resetInput()">Reset</button>
 
   <div id="result"></div>
+  <div id="history"></div>
 </div>
 
 <script>
   const categories = {
-    power: ["amazing","ultimate","proven","exclusive","unlock"],
-    emotional: ["shocking","inspiring","heartbreaking","hilarious","magical"],
-    curiosity: ["why","how","little-known","revealed","unknown"],
-    numbers: ["1","2","3","4","5","6","7","8","9","10","top","best","ways"],
-    action: ["boost","master","conquer","crush","create"]
+    power: ["amazing","ultimate","proven","exclusive","unlock","unbelievable","secret","breakthrough","instant","super"],
+    emotional: ["shocking","inspiring","heartbreaking","hilarious","magical","breathtaking","moving","emotional","joyful","scary"],
+    curiosity: ["why","how","little-known","revealed","unknown","mystery","secret","discover","hidden","uncover"],
+    numbers: ["1","2","3","4","5","6","7","8","9","10","top","best","ways","steps","methods"],
+    action: ["boost","master","conquer","crush","create","build","achieve","improve","learn","dominate"]
   };
 
   function analyzeHeadline() {
@@ -112,28 +91,68 @@
     }
 
     let score = 0;
+    let usedCategories = {power:false, emotional:false, curiosity:false, numbers:false, action:false};
     const words = input.split(/\s+/);
     const highlighted = words.map(word => {
       let lower = word.toLowerCase();
       for (let cat in categories) {
         if (categories[cat].includes(lower)) {
-          score += 2; // +2 points per match
+          score += 2;
+          usedCategories[cat] = true;
           return `<span class="${cat}">${word}</span>`;
         }
       }
       return word;
     }).join(" ");
 
-    // Bonus points for ideal headline length (5–12 words)
+    // Length bonus
     if(words.length >= 5 && words.length <= 12) score += 3;
     else if(words.length < 5) score += 1;
     else score += 2;
 
+    // Scale score 1-100
+    let maxPossible = words.length*2 + 3; // approximate max
+    score = Math.min(100, Math.round((score/maxPossible)*100));
+    if(score < 1) score = 1;
+
+    // Hints
+    let hints = [];
+    for(let cat in usedCategories){
+      if(!usedCategories[cat]){
+        hints.push(`Try adding a ${cat} word`);
+      }
+    }
+
+    // Save headline history
+    let history = JSON.parse(localStorage.getItem("headlines") || "[]");
+    history.unshift(input);
+    if(history.length>10) history.pop();
+    localStorage.setItem("headlines", JSON.stringify(history));
+
     document.getElementById('result').innerHTML = `
-      <p>Headline Score: <strong>${score}</strong></p>
+      <p>Headline Score: <strong>${score}/100</strong></p>
       <p>${highlighted}</p>
+      ${hints.length>0? `<p><em>Hints: ${hints.join(", ")}</em></p>` : ''}
     `;
+    displayHistory();
   }
+
+  function displayHistory(){
+    let history = JSON.parse(localStorage.getItem("headlines") || "[]");
+    if(history.length>0){
+      document.getElementById('history').innerHTML = `<p>Previous headlines:</p><ul>${history.map(h=>`<li>${h}</li>`).join('')}</ul>`;
+    } else {
+      document.getElementById('history').innerHTML = "";
+    }
+  }
+
+  function resetInput(){
+    document.getElementById('headlineInput').value = "";
+    document.getElementById('result').innerHTML = "";
+  }
+
+  // Display history on page load
+  displayHistory();
 </script>
 
 </body>
