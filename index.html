@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Headline Analyzer</title>
+
 <style>
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -12,16 +13,19 @@
     justify-content: center;
     padding: 20px;
   }
+
   .container {
     width: 100%;
     max-width: 500px;
-    background: rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(10px);
     padding: 20px;
     border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   }
-  input, button {
+
+  input,
+  button {
     width: 100%;
     padding: 12px;
     margin: 6px 0;
@@ -29,119 +33,175 @@
     border: none;
     font-size: 16px;
   }
+
   input {
-    background: rgba(255,255,255,0.5);
+    background: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(5px);
   }
+
   button {
-    background: rgba(0,150,255,0.6);
+    background: rgba(0, 150, 255, 0.6);
     color: #fff;
     font-weight: bold;
     cursor: pointer;
     transition: 0.3s;
   }
-  button:hover { background: rgba(0,150,255,0.8); }
-  #usageCounter { font-size: 0.9em; color: #666; margin-top: 4px; text-align: right; }
+
+  button:hover {
+    background: rgba(0, 150, 255, 0.8);
+  }
+
   .score-bar-container {
     width: 100%;
     height: 20px;
-    background: rgba(255,255,255,0.4);
+    background: rgba(255, 255, 255, 0.4);
     border-radius: 10px;
     margin: 10px 0;
     overflow: hidden;
   }
+
   .score-bar {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg,#00d4ff,#0066ff);
+    background: linear-gradient(90deg, #00d4ff, #0066ff);
     border-radius: 10px;
     transition: width 1s ease;
   }
+
   #resultText {
     margin-top: 8px;
     font-weight: bold;
     text-align: center;
   }
+
+  #history {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .history-item {
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  .history-headline {
+    font-weight: 600;
+  }
+
+  .history-score {
+    color: #333;
+    margin-top: 4px;
+  }
 </style>
 </head>
+
 <body>
 <div class="container">
-  <input id="headlineInput" type="text" placeholder="Enter headline">
+
+  <input id="headlineInput" type="text" placeholder="Enter headline" />
   <button id="analyzeBtn">Analyze</button>
-  <div id="usageCounter">0/5 analyses used today</div>
 
   <div class="score-bar-container">
     <div class="score-bar" id="scoreBar"></div>
   </div>
+
   <div id="resultText">Score: 0/100</div>
+
+  <div id="history">
+    <h3 style="margin-bottom:10px;">History</h3>
+    <div id="historyList"></div>
+  </div>
+
 </div>
 
 <script>
+// --------------------------------------------------------
+// Word banks (compressed arrays)
+// --------------------------------------------------------
+const powerWords = "Unlock,Boost,Secret,Proven,Instant,Ultimate,Exclusive,Revealed,Powerful,Breakthrough,Master,Win,Gain,Dominate,Lead,Conquer,Transform,Elevate,Maximize,Amplify,Achieve,Revolutionary,Accelerate,Crush,Command,Explode,Ignite,Unleash,Triumph,Supercharge,Victory,Ascend,Top,Champion,Invincible,Dynamic,Epic,Legendary,Force,Mega,Ultra,Prime,Elite,Advance,Overcome,Strength,Peak,Optimal,Success,Performance,Speed,Powerhouse,Intense,Drive,Results,Profit,Enhanced,Upgrade,Optimized,Unmatched,Unlimited,Pro,Expert,NextLevel,Turbo,Extreme,Prestige,Definitive,Superior,Major,Extraordinary,Significant,Winning,TopTier,Best,Super".split(",");
 
-// -----------------------
-// Word lists (100 per category, compressed for brevity)
-// -----------------------
-const powerWords = "Unlock,Boost,Secret,Proven,Instant,Ultimate,Exclusive,Revealed,Powerful,Breakthrough,Master,Win,Gain,Dominate,Lead,Conquer,Transform,Elevate,Maximize,Amplify,Achieve,Revolutionary,Accelerate,Crush,Command,Explode,Ignite,Unleash,Triumph,Supercharge,Victory,Ascend,Top,Champion,Invincible,Dynamic,Epic,Legendary,Force,Mega,Ultra,Prime,Elite,Advance,Overcome,Strength,Peak,Optimal,Success,Performance,Speed,Powerhouse,Intense,Drive,Results,Profit,Gain,Boosted,Enhanced,Upgrade,Accelerated,Mastered,Optimized,Unmatched,Unlimited,Pro,Expert,Elite,Advanced,NextLevel,Turbo,Extreme,Max,Champion,Prestige,Definitive,Paramount,Superior,Powerful,Breakout,Leading,Major,Extraordinary,Significant,Key,Winning,Prime,TopTier,Maximum,Best,Peak,Ultimate,Super".split(",");
-const emotionalWords = "Amazing,Exciting,Incredible,Shocking,Heartwarming,Unbelievable,Hilarious,Terrifying,Joyful,Inspiring,Emotional,Stunning,Sensational,Breathtaking,Beautiful,Thrilling,Touching,Fascinating,Fun,Passionate,Surprising,Wondrous,Exhilarating,Delightful,Intense,Moving,Enchanting,Mindblowing,Remarkable,Adorable,Magical,Unforgettable,Emotive,Cheerful,Blissful,Gripping,Powerful,Dynamic,Vivid,Compelling,Endearing,Charming,Emboldening,Astounding,Optimistic,Hopeful,Comforting,Uplifting,Heartfelt,Elated,Euphoric,Joyous,Excited,Overjoyed,Cheerful,Delighted,Amazed,Thrilled,Glad,Happy,Ecstatic,Inspired,Fascinated,Overwhelmed,Joyful,Optimistic,Exhilarated,Empowered,Rejoice,Loved,Bliss,Triumphant,Excitement,Excitedly,Cheery,Smiling,Gladness,Delight,Magic,Wonder,Fascination,Admiration,Passion,Loved,Affection,Gratitude,Hope,Joy,Encouraged".split(",");
-const persuasiveWords = "You,Now,Save,Free,Because,Easy,Limited,New,Guarantee,Discover,Best,Proven,Instant,Simple,Exclusive,Only,Act,Today,Join,Claim,Offer,Win,Try,Get,Boost,Unlock,Powerful,Results,Success,Increase,Fast,Better,Gain,Pro,Expert,Master,Leader,Ultimate,Top,Premium,Elite,Advance,Maximize,Achieve,Enhance,Upgrade,Accelerate,Optimize,Improve,Transform,Dominate,Conquer,Overcome,Triumph,Advance,Excel,Thrive,Secure,Access,Unleash,Leverage,Control,Create,Build,Grow,Expand,Develop,Elevate,Lead,Command,Excite,Engage,Captivate,Persuade,Influence,Motivate,Inspire,Convince,Attract,WinOver,Seize,Grab,ActNow,LimitedTime,Special,ExclusiveOffer,MustHave,BestEver,Hot,Trending,NewRelease,EarlyAccess,Bonus,UnlockNow,ClaimYour,Don’tMiss".split(",");
-const uncommonWords = "Epic,Remarkable,Legendary,Rare,Unexpected,Hidden,HiddenGem,Elite,Innovative,Mystery,Extraordinary,Unique,Secret,Uncommon,Original,Distinctive,Special,Exceptional,Outlier,Exquisite,Famous,Fabled,Mythic,Historic,Iconic,Ancient,Curious,Intriguing,Mindblowing,HiddenTreasure,Exotic,Exhilarating,Astounding,Notable,Novel,Exceptional,Marvelous,Splendid,RareFind,FabledGem,Obscure,Interesting,Unknown,Distinct,Unusual,Innovative,Creative,Groundbreaking,Revolutionary,Unexpectedly,Extra,Fantastic,Brilliant,Incredible,Unbelievable,Unheard,Undiscovered,Unseen,Remarkable,Amazing,Outstanding,Phenomenal,Superb,Spectacular,Elite,TopSecret,HiddenValue,Unrivaled,SecretWeapon,Magical,Legend,Icon,Ultimate,Exclusive,SpecialEdition,Prestigious,Distinctive,Prime,Select,HighEnd,Luxury,Majestic,Superior,FirstClass,Premium,TopTier,UniqueFind,SecretGem,HiddenTreasure,EliteChoice,Exquisite,HiddenValue,HiddenTreasure,OneOfAKind,Outlier,Exceptional".split(",");
-const sensoryWords = "Bright,Smooth,Loud,Soft,Vivid,Delicious,Sharp,Colorful,Crisp,Fragrant,Gentle,Savory,Sweet,Bitter,Spicy,Textured,Clean,Glossy,Fresh,Rich,Scented,Crispy,Moist,Glowing,Shiny,Clear,Pure,Flowing,Melodic,Harmonic,Resonant,Intense,Subtle,Light,Dark,Deep,Sensational,Sparkling,Silky,Velvety,Thick,Thin,Sticky,Juicy,Tangy,Aromatic,Fluffy,Delightful,Plush,Smoothly,Luxurious,Softness,Shimmering,Gloss,Refined,Polished,Elegant,Luminous,Brightly,Glorious,Shimmer,Pristine,Airy,Glinting,Glazed,Clearcut,Vibrant,Richly,Heavenly,Softened,Textured,Glorious,Lush,Exquisite,Delicate,Flawless,Polished,Crystal,Cleanse,Glossiness,Beaming,Radiant,Shiny,Lucid".split(",");
+const emotionalWords = "Amazing,Exciting,Incredible,Shocking,Heartwarming,Unbelievable,Hilarious,Joyful,Inspiring,Emotional,Stunning,Sensational,Beautiful,Thrilling,Touching,Fascinating,Fun,Surprising,Wondrous,Exhilarating,Delightful,Intense,Moving,Magical,Unforgettable,Charming,Astounding,Hopeful,Comforting,Uplifting,Heartfelt,Elated,Euphoric,Joyous,Excited,Happy,Glad,Thrilled,Inspired,Fascinated,Overwhelmed,Optimistic,Empowered,Triumphant,Gratitude,Wonder,Admiration,Passion,Love".split(",");
 
-// -----------------------
+const persuasiveWords = "You,Now,Save,Free,Because,Easy,Limited,New,Guarantee,Discover,Best,Exclusive,Only,Act,Today,Join,Claim,Offer,Win,Try,Get,Unlock,Success,Increase,Fast,Better,Gain,Top,Premium,Enhance,Improve,Transform,Thrive,Secure,Access,Create,Build,Grow,Lead,Engage,Captivate,Persuade,Influence,Motivate,Inspire,Convince,Attract,Seize,Grab,ActNow,LimitedTime,Bonus".split(",");
+
+const uncommonWords = "Epic,Remarkable,Legendary,Rare,Unexpected,Hidden,Elite,Innovative,Extraordinary,Unique,Distinctive,Exceptional,Exquisite,Iconic,Ancient,Intriguing,Mindblowing,Exotic,Astounding,Novel,Fantastic,Brilliant,Unheard,Undiscovered,Unseen,Phenomenal,Superb,Spectacular,Majestic,Luxury,Premium,OneOfAKind".split(",");
+
+const sensoryWords = "Bright,Smooth,Loud,Soft,Vivid,Delicious,Sharp,Crisp,Fragrant,Savory,Sweet,Bitter,Spicy,Textured,Glossy,Fresh,Rich,Scented,Moist,Glowing,Shiny,Clear,Pure,Melodic,Resonant,Intense,Light,Dark,Deep,Sparkling,Silky,Velvety,Juicy,Tangy,Aromatic,Fluffy,Plush,Lush,Radiant".split(",");
+
+// --------------------------------------------------------
+// Elements
+// --------------------------------------------------------
+const analyzeBtn = document.getElementById("analyzeBtn");
+const headlineEl = document.getElementById("headlineInput");
+const scoreBarEl = document.getElementById("scoreBar");
+const resultTextEl = document.getElementById("resultText");
+const historyListEl = document.getElementById("historyList");
+
+// --------------------------------------------------------
 // Scoring logic
-// -----------------------
+// --------------------------------------------------------
 function scoreHeadline(text) {
   let score = 0;
   const words = text.split(/\s+/);
-  const lengthScore = Math.min(20, words.length * 2); // max 20 points for ideal length
+
+  const lengthScore = Math.min(20, words.length * 2);
   score += lengthScore;
 
-  function countMatches(list){
-    return words.filter(w=>list.some(p=>p.toLowerCase() === w.toLowerCase())).length;
-  }
+  const clean = w => w.replace(/[^a-z]/gi, "").toLowerCase();
+  const countMatches = list => words.filter(w => list.includes(clean(w))).length;
 
-  const powerScore = Math.min(20,countMatches(powerWords)*4);
-  const emotionalScore = Math.min(20,countMatches(emotionalWords)*4);
-  const persuasiveScore = Math.min(20,countMatches(persuasiveWords)*4);
-  const uncommonScore = Math.min(10,countMatches(uncommonWords)*2);
-  const sensoryScore = Math.min(10,countMatches(sensoryWords)*2);
+  const power = Math.min(20, countMatches(powerWords.map(w => w.toLowerCase())) * 4);
+  const emo = Math.min(20, countMatches(emotionalWords.map(w => w.toLowerCase())) * 4);
+  const pers = Math.min(20, countMatches(persuasiveWords.map(w => w.toLowerCase())) * 4);
+  const un = Math.min(10, countMatches(uncommonWords.map(w => w.toLowerCase())) * 2);
+  const sens = Math.min(10, countMatches(sensoryWords.map(w => w.toLowerCase())) * 2);
 
-  score += powerScore + emotionalScore + persuasiveScore + uncommonScore + sensoryScore;
-  if(score>100) score=100;
+  score += power + emo + pers + un + sens;
+  if (score > 100) score = 100;
 
-  // assign scale
-  let scale = "";
-  if(score<40) scale="Poor";
-  else if(score<60) scale="Decent";
-  else if(score<75) scale="Good";
-  else if(score<90) scale="Great";
-  else scale="Outstanding";
+  const scale =
+    score < 40 ? "Poor" :
+    score < 60 ? "Decent" :
+    score < 75 ? "Good" :
+    score < 90 ? "Great" :
+    "Outstanding";
 
-  return {score, scale};
+  return { score, scale };
 }
 
-// -----------------------
-// Render result
-// -----------------------
-function renderResult({score,scale}){
-  scoreBarEl.style.width = score + "%";
-  resultTextEl.textContent = `Score: ${score}/100 — ${scale}`;
+// --------------------------------------------------------
+// Render score + history
+// --------------------------------------------------------
+function renderScore(result) {
+  scoreBarEl.style.width = result.score + "%";
+  resultTextEl.textContent = `Score: ${result.score}/100 — ${result.scale}`;
 }
 
-// -----------------------
+function addToHistory(headline, result) {
+  const div = document.createElement("div");
+  div.className = "history-item";
+  div.innerHTML = `
+    <div class="history-headline">${headline}</div>
+    <div class="history-score">Score: ${result.score}/100 — ${result.scale}</div>
+  `;
+  historyListEl.prepend(div);
+}
+
+// --------------------------------------------------------
 // Analyze button
-// -----------------------
-analyzeBtn.addEventListener("click", ()=>{
-  if(!canAnalyze()){
-    alert(`You've reached the daily limit of ${MAX_DAILY_ANALYSES} headline analyses. Come back tomorrow!`);
-    return;
-  }
-  const t = headlineEl.value.trim();
-  if(!t) return;
-  incrementUsage();
-  const res = scoreHeadline(t);
-  renderResult(res);
+// --------------------------------------------------------
+analyzeBtn.addEventListener("click", () => {
+  const text = headlineEl.value.trim();
+  if (!text) return;
+
+  const result = scoreHeadline(text);
+  renderScore(result);
+  addToHistory(text, result);
 });
 </script>
+
 </body>
 </html>
