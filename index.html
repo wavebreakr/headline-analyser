@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Headline Analyzer — MI-style (Structure-first)</title>
+<title>Headline Analyzer — MI-style</title>
 <style>
   :root{
     --bg:#071017;
@@ -80,245 +80,134 @@
   </div>
 
 <script>
-/* ================
-   TIGHT CURATED LISTS
-   20–40 items per relevant list (lowercase for matching)
-   ================ */
 const POWER = ["unlock","boost","dominate","supercharge","ignite","amplify","explode","unleash","skyrocket","crush","master","conquer","accelerate","maximize","transform","revolutionize","optimize","surge","charge","turbo"];
 const EMOTIONAL = ["amazing","incredible","astonishing","heartfelt","uplifting","thrilling","breathtaking","touching","inspiring","joyful","passion","delight","stunning","moving","wonderful","magical","surprising","hopeful","uplift","wow"];
-const COMMON = ["the","a","an","and","or","for","to","of","in","on","with","your","you","this","that","get","now","new","free","best","top","learn","guide","easy","today","video","series","step"];
-const UNCOMMON = ["secret","insider","breakthrough","rare","exclusive","elite","proven","novel","groundbreaking","innovative","radical","proprietary","scalable","advanced","tactical","strategic"];
-const URGENCY = ["now","today","hurry","limited","expires","last","final","urgent","immediately","act now","don't miss","deadline"];
-const SIMPLICITY = ["easy","simple","clear","quick","guide","checklist","template","cheatsheet","fast","shortcut","how to","step-by-step"];
-const TRUST = ["proven","verified","expert","trusted","research","data","certified","guarantee","validated","official","tested","evidence","credible"];
-
-const POSITIVE = ["success","win","boost","gain","growth","improve","benefit","profit","results","best","amazing"];
-const NEGATIVE = ["mistake","fail","failure","problem","avoid","stop","warning","risk","scam","lost"];
-
 const ACTION_VERBS = ["unlock","boost","learn","discover","get","build","create","grow","save","increase","improve","transform","start","master","claim","join","register","download","use","explains","explained","explain"];
+const audienceList = ["fundraiser","fundraisers","donor","donors","charity","charities","marketer","marketers","runner","runners","parent","parents","teacher","teachers","startup","founder","founders"];
 
-/* helper functions */
-function clean(s){ return String(s||"").replace(/[^\w\s'-]/g,"").toLowerCase().trim(); }
 function wordCount(text){ return (text.trim().split(/\s+/).filter(Boolean)).length; }
 function charCount(text){ return String(text||"").length; }
-function containsRegex(text, arr){ const t = text.toLowerCase(); for(const a of arr){ const re = new RegExp("\\b"+a.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","i"); if(re.test(t)) return true; } return false; }
-function uniqueMatchCount(text, arr){ const t = text.toLowerCase(); const set = new Set(); for(const a of arr){ const re = new RegExp("\\b"+a.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","gi"); const m = t.match(re); if(m) set.add(a.toLowerCase()); } return set.size; }
-function occurrenceCount(text, arr){ const t = text.toLowerCase(); let c=0; for(const a of arr){ const re = new RegExp("\\b"+a.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","gi"); const m = t.match(re); if(m) c += m.length; } return c; }
-
-/* ================
-   SCORING MODEL (total 100)
-   - Length: 40
-   - Structure: 30
-   - Clarity: 15
-   - Emotion/Power: 10
-   - Uniqueness: 5
-   ================ */
+function occurrenceCount(text, arr){ const t=text.toLowerCase(); let c=0; for(const a of arr){ const re=new RegExp("\\b"+a+"\\b","gi"); const m=t.match(re); if(m) c+=m.length;} return c; }
+function uniqueMatchCount(text, arr){ const t=text.toLowerCase(); const set=new Set(); for(const a of arr){ const re=new RegExp("\\b"+a+"\\b","gi"); const m=t.match(re); if(m) set.add(a.toLowerCase());} return set.size;}
 
 function scoreHeadlineMI(text){
   const raw = String(text||"").trim();
   const lower = raw.toLowerCase();
-
-  // quick tokens
   const wc = wordCount(raw);
   const cc = charCount(raw);
 
-  /* --- LENGTH (40 points) --- 
-     MonsterInsights favours character length ~55-70 and word length 6-12.
-     We'll give full 40 if char between 48-80 AND words 6-14; graduated otherwise.
-  */
-  let lengthPoints = 0;
-  if(cc >= 48 && cc <= 80 && wc >=6 && wc <=14) lengthPoints = 40;
-  else {
-    // partial scoring by closeness
-    // char score 0..30, word score 0..10 (sum up to 40)
-    let charScore = 0;
-    if(cc >= 40 && cc <= 100){
-      // map 40..100 -> 0..30, center 55-70 ~ high
-      const center = 62;
-      const dist = Math.abs(cc - center);
-      // smaller dist -> higher; dist 0 -> 30; dist 30 -> 0
-      charScore = Math.max(0, Math.round(30 * (1 - Math.min(dist / 30, 1))));
-    }
-    let wordScore = 0;
-    if(wc >=4 && wc <=16){
-      const ideal = 9;
-      const distW = Math.abs(wc - ideal);
-      wordScore = Math.max(0, Math.round(10 * (1 - Math.min(distW / 7, 1))));
-    }
-    lengthPoints = charScore + wordScore;
+  // LENGTH 40 pts
+  let lengthPoints=0;
+  if(cc>=48 && cc<=90 && wc>=6 && wc<=16) lengthPoints=40;
+  else{
+    let charScore=0;
+    if(cc>=40 && cc<=100){ const center=62; const dist=Math.abs(cc-center); charScore=Math.max(0, Math.round(30*(1-Math.min(dist/30,1)))); }
+    let wordScore=0;
+    if(wc>=4 && wc<=16){ const ideal=9; const distW=Math.abs(wc-ideal); wordScore=Math.max(0, Math.round(10*(1-Math.min(distW/7,1)))); }
+    lengthPoints=charScore+wordScore;
   }
 
-  /* --- STRUCTURE (30 points) ---
-     Reward classic MI patterns: "how", "here's how", numbers at start, colon, parentheses, year, question formats, named author, "explains", list formats.
-  */
-  let structPoints = 0;
-  const starts = (raw.trim().split(/\s+/)[0]||"").toLowerCase();
-  if(/^how\b|^how-to\b/.test(lower) || /^here('|’)s how\b/i.test(raw)) structPoints += 8;
-  if(/^\d+[\.\-]?\s/.test(raw) || /^\d+\s/.test(raw)) structPoints += 6; // number-led list
-  if(/\:/.test(raw)) structPoints += 4;
-  if(/\(|\)|\[|\]/.test(raw)) structPoints += 3;
-  if(/\b(why|how|what|when|where)\b/i.test(raw) && /^[A-Z]/.test(raw.trim())) structPoints += 3; // question-like or why-statement
-  if(/\b(202[3-9]|202[0-9])\b/.test(raw)) structPoints += 3; // year detection (2023+)
-  if(/\b(explains|explained|explaining|interview)\b/i.test(lower)) structPoints += 3;
-  if(/[A-Z][a-z]+ [A-Z][a-z]+/.test(raw) && raw.indexOf(":")>0) structPoints += 2; // possible named author + colon
-  // cap
-  structPoints = Math.min(structPoints, 30);
+  // STRUCTURE 30 pts
+  let structPoints=0;
+  if(/^how\b|^how-to\b/.test(lower)||/^here('|’)s how\b/i.test(raw)) structPoints+=12;
+  if(/^\d+[\.\-]?\s/.test(raw)||/^\d+\s/.test(raw)) structPoints+=8;
+  if(/\:/.test(raw)) structPoints+=6;
+  if(/\(|\)|\[|\]/.test(raw)) structPoints+=5;
+  if(/\b(why|how|what|when|where)\b/i.test(lower)&&/^[A-Z]/.test(raw.trim())) structPoints+=5;
+  if(/\b(202[3-9]|202[0-9])\b/.test(raw)) structPoints+=5;
+  if(/\b(explains|explained|explaining|interview)\b/i.test(lower)) structPoints+=5;
+  if(/[A-Z][a-z]+ [A-Z][a-z]+/.test(raw)&&raw.indexOf(":")>0) structPoints+=3;
+  structPoints=Math.min(structPoints,30);
 
-  /* --- CLARITY & ACTIONABILITY (15) ---
-     named audience, action verbs, second-person signals, intent phrases ("why you need", "how to", "guide")
-  */
-  let clarityPoints = 0;
-  // audience detection common fundraising words; expand as you like
-  const audienceList = ["fundraiser","fundraisers","donor","donors","charity","charities","marketer","marketers","runner","runners","parent","parents","teacher","teachers","startup","founder","founders"];
-  if(audienceList.some(a=> new RegExp("\\b"+a+"\\b","i").test(lower))) clarityPoints += 5;
-  if(/\b(why you need|why you must|why you should)\b/i.test(lower)) clarityPoints += 4;
-  const actionVerbMatches = occurrenceCount(lower, ACTION_VERBS);
-  clarityPoints += Math.min(6, actionVerbMatches * 2); // up to 6
-  if(/\b(you|your)\b/i.test(lower)) clarityPoints += 2;
-  if(/\b(how to|guide|checklist|template|step-by-step)\b/i.test(lower)) clarityPoints += 3;
-  clarityPoints = Math.min(clarityPoints,15);
+  // CLARITY 15 pts
+  let clarityPoints=0;
+  if(audienceList.some(a=>new RegExp("\\b"+a+"\\b","i").test(lower))) clarityPoints+=6;
+  if(/\b(why you need|why you must|why you should)\b/i.test(lower)) clarityPoints+=5;
+  clarityPoints+=Math.min(8,occurrenceCount(lower,ACTION_VERBS)*2);
+  if(/\b(you|your)\b/i.test(lower)) clarityPoints+=3;
+  if(/\b(how to|guide|checklist|template|step-by-step)\b/i.test(lower)) clarityPoints+=3;
+  clarityPoints=Math.min(clarityPoints,15);
 
-  /* --- EMOTION / POWER (10) ---
-     light influence from power/emotional words
-  */
-  const powHits = uniqueMatchCount(lower, POWER);
-  const emoHits = uniqueMatchCount(lower, EMOTIONAL);
-  const emotionPowerPoints = Math.min(10, powHits * 3 + emoHits * 2); // small weights
+  // EMOTION/POWER 10 pts
+  const emotionPowerPoints=Math.min(10,uniqueMatchCount(lower,POWER)*3 + uniqueMatchCount(lower,EMOTIONAL)*2);
 
-  /* --- UNIQUENESS (5) ---
-     ratio of unique tokens to total tokens
-  */
-  const tokens = raw.toLowerCase().split(/\s+/).filter(Boolean).map(t => t.replace(/[^\w'-]/g,''));
+  // UNIQUENESS 5 pts
+  const tokens = raw.toLowerCase().split(/\s+/).filter(Boolean).map(t=>t.replace(/[^\w'-]/g,''));
   const uniqueTokens = new Set(tokens.filter(Boolean));
-  const uniqRatio = tokens.length ? uniqueTokens.size / tokens.length : 0;
-  const uniquenessPoints = uniqRatio >= 0.75 ? 5 : uniqRatio >= 0.6 ? 3 : uniqRatio >= 0.45 ? 1 : 0;
+  const uniqRatio = tokens.length?uniqueTokens.size/tokens.length:0;
+  const uniquenessPoints = uniqRatio>=0.75?5:uniqRatio>=0.6?3:uniqRatio>=0.45?1:0;
 
-  /* --- SKIMMABILITY PENALTIES (reduce final) ---
-     long words and overload of complex words
-  */
-  const longWords = tokens.filter(t => t.length > 13).length;
-  const complexWords = tokens.filter(t => t.length > 8).length;
-  const skimmabilityPenalty = Math.min(12, longWords * 5 + Math.max(0, complexWords - longWords) * 1);
+  // SKIMMABILITY PENALTY (reduced)
+  const longWords=tokens.filter(t=>t.length>13).length;
+  const complexWords=tokens.filter(t=>t.length>8).length;
+  const skimmabilityPenalty=Math.min(6,longWords*3+Math.max(0,complexWords-longWords)*1);
 
-  /* --- Compose final raw total and apply penalty ---
-     Totals: length(40) + structure(30) + clarity(15) + emotionPower(10) + uniqueness(5) = 100
-  */
-  const rawTotal = lengthPoints + structPoints + clarityPoints + emotionPowerPoints + uniquenessPoints;
-  const finalScore = Math.round(Math.max(0, Math.min(100, rawTotal - skimmabilityPenalty)));
+  const rawTotal=lengthPoints+structPoints+clarityPoints+emotionPowerPoints+uniquenessPoints;
+  const finalScore=Math.round(Math.max(0,Math.min(100,rawTotal-skimmabilityPenalty)));
 
-  /* --- Labeling like MI-style ---
-     >=80 Outstanding; 70-79 Great; 50-69 Good; 30-49 Decent; <30 Poor
-  */
-  const label = finalScore >= 80 ? "Outstanding" :
-                finalScore >= 70 ? "Great" :
-                finalScore >= 50 ? "Good" :
-                finalScore >= 30 ? "Decent" : "Poor";
+  const label = finalScore>=80?"Outstanding":finalScore>=70?"Great":finalScore>=50?"Good":finalScore>=30?"Decent":"Poor";
 
-  /* --- Highlight building (order matters) --- */
-  let highlighted = raw;
-  // replace power first, then emotional, then structure keywords (years, how-to, numbers), then audience
-  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
-  const replList = (arr, cls) => {
-    arr.forEach(w=>{
-      highlighted = highlighted.replace(new RegExp("\\b"+esc(w)+"\\b","gi"), match=>`<span class="highlight ${cls}">${match}</span>`);
-    });
-  };
-  replList(POWER, "hp");
-  replList(EMOTIONAL, "he");
-  // structure highlights: years, how-to, numbers, parentheses, colon
-  highlighted = highlighted.replace(/\b(20[2-9][0-9])\b/g, '<span class="highlight hl">$1</span>');
-  highlighted = highlighted.replace(/\b(how to|here's how|here is how|why you need|why you should|why you must|how)\b/gi, match=>`<span class="highlight hl">${match}</span>`);
-  highlighted = highlighted.replace(/(\(|\))/g, '<span class="highlight hl">$1</span>');
-  highlighted = highlighted.replace(/(:)/g, '<span class="highlight hl">$1</span>');
-  // audience highlight
-  audienceList.forEach(a=>{
-    highlighted = highlighted.replace(new RegExp("\\b"+esc(a)+"\\b","gi"), match=>`<span class="highlight hs">${match}</span>`);
-  });
+  let highlighted=raw;
+  const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+  const replList=(arr,cls)=>{arr.forEach(w=>{highlighted=highlighted.replace(new RegExp("\\b"+esc(w)+"\\b","gi"),match=>`<span class="highlight ${cls}">${match}</span>`);});};
+  replList(POWER,"hp");
+  replList(EMOTIONAL,"he");
+  highlighted=highlighted.replace(/\b(20[2-9][0-9])\b/g,'<span class="highlight hl">$1</span>');
+  highlighted=highlighted.replace(/\b(how to|here's how|here is how|why you need|why you should|why you must|how)\b/gi,match=>`<span class="highlight hl">${match}</span>`);
+  highlighted=highlighted.replace(/(\(|\))/g,'<span class="highlight hl">$1</span>');
+  highlighted=highlighted.replace(/(:)/g,'<span class="highlight hl">$1</span>');
+  audienceList.forEach(a=>{highlighted=highlighted.replace(new RegExp("\\b"+esc(a)+"\\b","gi"),match=>`<span class="highlight hs">${match}</span>`);});
 
-  return {
-    final: finalScore,
-    label,
-    lengthPoints: Math.round(lengthPoints),
-    structPoints: Math.round(structPoints),
-    clarityPoints: Math.round(clarityPoints),
-    emotionPowerPoints: Math.round(emotionPowerPoints),
-    uniquenessPoints: Math.round(uniquenessPoints),
-    skimmabilityPenalty,
-    highlighted
-  };
+  return {final:finalScore,label,lengthPoints,structPoints,clarityPoints,emotionPowerPoints,uniquenessPoints,skimmabilityPenalty,highlighted};
 }
 
-/* ================
-   History storage: last 10
-   ================ */
-const HISTORY_KEY = "mi_mimic_history_v2";
-function loadHistory(){ try{ const raw = localStorage.getItem(HISTORY_KEY); return raw ? JSON.parse(raw) : []; }catch(e){return[];} }
-function saveHistory(arr){ localStorage.setItem(HISTORY_KEY, JSON.stringify(arr.slice(0,10))); }
-function addHistoryItem(headline, scoreObj){
-  const arr = loadHistory();
-  arr.unshift({ headline, score: scoreObj.final, label: scoreObj.label, at: new Date().toISOString() });
-  saveHistory(arr);
-  renderHistory();
-}
-function clearHistory(){ localStorage.removeItem(HISTORY_KEY); renderHistory(); }
-function renderHistory(){
-  const container = document.getElementById("historyList");
-  container.innerHTML = "";
-  const arr = loadHistory();
-  if(arr.length === 0){ container.innerHTML = "<div class='small' style='opacity:0.85'>No history yet — analyze a headline to save it here.</div>"; return; }
-  arr.forEach(it=>{
-    const el = document.createElement("div");
-    el.className = "history-item";
-    el.innerHTML = `<div class="history-headline">${it.headline}</div>
-      <div class="small" style="margin-top:6px">Score: <strong>${it.score}</strong> — ${it.label} • <span style="opacity:0.75">${new Date(it.at).toLocaleString()}</span></div>`;
-    container.appendChild(el);
-  });
-}
+/* HISTORY */
+const HISTORY_KEY="mi_mimic_history_v2";
+function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JSON.parse(r):[]}catch(e){return[];}}
+function saveHistory(arr){localStorage.setItem(HISTORY_KEY,JSON.stringify(arr.slice(0,10)));}
+function addHistoryItem(headline,scoreObj){const arr=loadHistory();arr.unshift({headline,score:scoreObj.final,label:scoreObj.label,at:new Date().toISOString()});saveHistory(arr);renderHistory();}
+function clearHistory(){localStorage.removeItem(HISTORY_KEY);renderHistory();}
+function renderHistory(){const c=document.getElementById("historyList");c.innerHTML="";const arr=loadHistory();if(arr.length===0){c.innerHTML="<div class='small' style='opacity:0.85'>No history yet — analyze a headline to save it here.</div>";return;}arr.forEach(it=>{const el=document.createElement("div");el.className="history-item";el.innerHTML=`<div class="history-headline">${it.headline}</div><div class="small" style="margin-top:6px">Score: <strong>${it.score}</strong> — ${it.label} • <span style="opacity:0.75">${new Date(it.at).toLocaleString()}</span></div>`;c.appendChild(el);});}
 
-/* ================
-   UI wiring
-   ================ */
-const analyzeBtn = document.getElementById("analyzeBtn");
-const clearBtn = document.getElementById("clearBtn");
-const clearHistoryBtn = document.getElementById("clearHistoryBtn");
-const headlineEl = document.getElementById("headline");
-const scoreNumberEl = document.getElementById("scoreNumber");
-const scoreBarEl = document.getElementById("scoreBar");
-const ratingLabelEl = document.getElementById("ratingLabel");
-const metaListEl = document.getElementById("metaList");
+/* UI */
+const analyzeBtn=document.getElementById("analyzeBtn");
+const clearBtn=document.getElementById("clearBtn");
+const clearHistoryBtn=document.getElementById("clearHistoryBtn");
+const headlineEl=document.getElementById("headline");
+const scoreNumberEl=document.getElementById("scoreNumber");
+const scoreBarEl=document.getElementById("scoreBar");
+const ratingLabelEl=document.getElementById("ratingLabel");
+const metaListEl=document.getElementById("metaList");
 
 function renderResultUI(obj){
-  scoreNumberEl.textContent = obj.final;
-  scoreBarEl.style.width = obj.final + "%";
-  ratingLabelEl.textContent = obj.label;
-  metaListEl.innerHTML = `
+  scoreNumberEl.textContent=obj.final;
+  scoreBarEl.style.width=obj.final+"%";
+  ratingLabelEl.textContent=obj.label;
+  metaListEl.innerHTML=`
     <div class="row"><div>Length</div><div>${obj.lengthPoints}/40</div></div>
     <div class="row"><div>Structure</div><div>${obj.structPoints}/30</div></div>
     <div class="row"><div>Clarity</div><div>${obj.clarityPoints}/15</div></div>
     <div class="row"><div>Emotion/Power</div><div>${obj.emotionPowerPoints}/10</div></div>
     <div class="row"><div>Uniqueness</div><div>${obj.uniquenessPoints}/5</div></div>
     <div class="row"><div>Skimmability penalty</div><div>-${obj.skimmabilityPenalty}</div></div>
-    <div style="margin-top:10px"><div style="font-weight:700">Highlighted</div><div style="margin-top:6px">${obj.highlighted}</div></div>
-  `;
+    <div style="margin-top:10px"><div style="font-weight:700">Highlighted</div><div style="margin-top:6px">${obj.highlighted}</div></div>`;
 }
 
-/* events */
-analyzeBtn.addEventListener("click", ()=>{
-  const t = headlineEl.value.trim();
+analyzeBtn.addEventListener("click",()=>{
+  const t=headlineEl.value.trim();
   if(!t) return;
-  const out = scoreHeadlineMI(t);
+  const out=scoreHeadlineMI(t);
   renderResultUI(out);
-  addHistoryItem(t, out);
+  addHistoryItem(t,out);
 });
-clearBtn.addEventListener("click", ()=> headlineEl.value = "");
-clearHistoryBtn.addEventListener("click", ()=> { if(confirm("Clear history?")) clearHistory(); });
+clearBtn.addEventListener("click",()=>headlineEl.value="");
+clearHistoryBtn.addEventListener("click",()=>{if(confirm("Clear history?")) clearHistory();});
 
-/* initial */
 renderHistory();
-window.addEventListener("load", ()=>{
-  const sample = headlineEl.value.trim();
+window.addEventListener("load",()=>{
+  const sample=headlineEl.value.trim();
   if(sample){
-    const out = scoreHeadlineMI(sample);
+    const out=scoreHeadlineMI(sample);
     renderResultUI(out);
   }
 });
