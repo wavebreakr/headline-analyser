@@ -3,155 +3,140 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Headline Analyzer — MI-style</title>
+<title>Headline Analyzer — Aggressive MI Formula</title>
 <style>
-  :root{
-    --bg:#071017;
-    --glass: rgba(255,255,255,0.06);
-    --accent: linear-gradient(90deg,#7dd3fc,#8c5bff);
-    --muted: rgba(255,255,255,0.78);
-  }
-  *{box-sizing:border-box}
-  body{margin:0;padding:20px;font-family:-apple-system,BlinkMacSystemFont,"Inter",system-ui,Segoe UI,Roboto,Helvetica,Arial;background:linear-gradient(135deg,var(--bg),#0b1830);color:#fff;display:flex;justify-content:center}
-  .wrap{width:100%;max-width:880px}
-  .card{background:var(--glass);padding:18px;border-radius:16px;backdrop-filter:blur(12px);box-shadow:0 14px 40px rgba(0,0,0,0.6)}
-  h1{margin:0 0 12px;font-size:20px;text-align:center}
-  textarea{width:100%;padding:12px;border-radius:12px;border:none;background:rgba(255,255,255,0.03);color:#fff;resize:none;font-size:15px;min-height:72px}
-  .controls{display:flex;gap:10px;margin-top:12px}
-  .btn{flex:1;padding:12px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:var(--accent);color:#021}
-  .btn.alt{background:rgba(255,255,255,0.06);color:#fff}
-  .result{margin-top:14px}
-  .score{font-size:44px;text-align:center;font-weight:800}
-  .rating{text-align:center;margin-top:6px;font-weight:700;opacity:0.95}
-  .score-bar-wrap{width:100%;height:14px;background:rgba(255,255,255,0.04);border-radius:10px;overflow:hidden;margin-top:12px}
-  .score-bar{height:100%;width:0;background:var(--accent);transition:width 900ms cubic-bezier(.2,.9,.2,1)}
-  .meta{margin-top:12px;font-size:13px;color:var(--muted)}
-  .meta .row{display:flex;justify-content:space-between;margin-top:6px}
-  .legend{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
-  .legend span{padding:6px 8px;border-radius:8px;font-weight:700;font-size:13px}
-  .he{background:rgba(255,60,120,0.18)} .hs{background:rgba(0,205,255,0.08)} .hp{background:rgba(150,80,255,0.12)} .hl{background:rgba(255,200,120,0.08)}
-  .highlight { padding:2px 6px;border-radius:6px }
-  .history{margin-top:18px;border-top:1px solid rgba(255,255,255,0.03);padding-top:12px}
-  .history-item{background:rgba(255,255,255,0.03);padding:10px;border-radius:10px;margin-bottom:8px}
-  .history-headline{font-weight:700}
-  .small{font-size:13px;opacity:0.9}
-  .row-inline{display:flex;gap:8px;align-items:center}
-  @media(min-width:900px){ .score{font-size:64px} }
+:root{
+  --bg:#071017;
+  --glass: rgba(255,255,255,0.06);
+  --accent: linear-gradient(90deg,#7dd3fc,#8c5bff);
+  --muted: rgba(255,255,255,0.78);
+}
+*{box-sizing:border-box}
+body{margin:0;padding:20px;font-family:-apple-system,BlinkMacSystemFont,"Inter",system-ui,Segoe UI,Roboto,Helvetica,Arial;background:linear-gradient(135deg,var(--bg),#0b1830);color:#fff;display:flex;justify-content:center}
+.wrap{width:100%;max-width:880px}
+.card{background:var(--glass);padding:18px;border-radius:16px;backdrop-filter:blur(12px);box-shadow:0 14px 40px rgba(0,0,0,0.6)}
+h1{margin:0 0 12px;font-size:20px;text-align:center}
+textarea{width:100%;padding:12px;border-radius:12px;border:none;background:rgba(255,255,255,0.03);color:#fff;resize:none;font-size:15px;min-height:72px}
+.controls{display:flex;gap:10px;margin-top:12px}
+.btn{flex:1;padding:12px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:var(--accent);color:#021}
+.btn.alt{background:rgba(255,255,255,0.06);color:#fff}
+.result{margin-top:14px}
+.score{font-size:44px;text-align:center;font-weight:800}
+.rating{text-align:center;margin-top:6px;font-weight:700;opacity:0.95}
+.score-bar-wrap{width:100%;height:14px;background:rgba(255,255,255,0.04);border-radius:10px;overflow:hidden;margin-top:12px}
+.score-bar{height:100%;width:0;background:var(--accent);transition:width 900ms cubic-bezier(.2,.9,.2,1)}
+.meta{margin-top:12px;font-size:13px;color:var(--muted)}
+.meta .row{display:flex;justify-content:space-between;margin-top:6px}
+.legend{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.legend span{padding:6px 8px;border-radius:8px;font-weight:700;font-size:13px}
+.he{background:rgba(255,60,120,0.18)} .hs{background:rgba(0,205,255,0.08)} .hp{background:rgba(150,80,255,0.12)} .hl{background:rgba(255,200,120,0.08)}
+.highlight { padding:2px 6px;border-radius:6px }
+.history{margin-top:18px;border-top:1px solid rgba(255,255,255,0.03);padding-top:12px}
+.history-item{background:rgba(255,255,255,0.03);padding:10px;border-radius:10px;margin-bottom:8px}
+.history-headline{font-weight:700}
+.small{font-size:13px;opacity:0.9}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Headline Analyzer — MI-like (Structure-first)</h1>
+<div class="wrap">
+  <div class="card">
+    <h1>Headline Analyzer — Aggressive MI Formula</h1>
 
-      <textarea id="headline" placeholder="Type or paste your headline...">Here’s How Fundraisers Want to Be Contacted in 2025 (New Research)</textarea>
+    <textarea id="headline">Here’s How Fundraisers Want to Be Contacted in 2025 (New Research)</textarea>
 
-      <div class="controls">
-        <button id="analyzeBtn" class="btn">Analyze</button>
-        <button id="clearBtn" class="btn alt">Clear</button>
-      </div>
-
-      <div class="result" id="resultArea" aria-live="polite">
-        <div class="score" id="scoreNumber">0</div>
-        <div class="score-bar-wrap"><div id="scoreBar" class="score-bar"></div></div>
-        <div class="rating" id="ratingLabel">—</div>
-
-        <div class="meta" id="metaList"></div>
-
-        <div class="legend">
-          <span class="he">Emotional</span>
-          <span class="hp">Power</span>
-          <span class="hl">Structure</span>
-          <span class="hs">Simplicity</span>
-        </div>
-      </div>
-
-      <div class="history" id="historyBlock">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <h3 style="margin:8px 0">Last 10 Tests</h3>
-          <div>
-            <button id="clearHistoryBtn" class="btn alt" style="padding:8px 10px;font-weight:700">Clear History</button>
-          </div>
-        </div>
-        <div id="historyList"></div>
-      </div>
-
+    <div class="controls">
+      <button id="analyzeBtn" class="btn">Analyze</button>
+      <button id="clearBtn" class="btn alt">Clear</button>
     </div>
+
+    <div class="result" id="resultArea" aria-live="polite">
+      <div class="score" id="scoreNumber">0</div>
+      <div class="score-bar-wrap"><div id="scoreBar" class="score-bar"></div></div>
+      <div class="rating" id="ratingLabel">—</div>
+      <div class="meta" id="metaList"></div>
+      <div class="legend">
+        <span class="he">Emotional</span>
+        <span class="hp">Power</span>
+        <span class="hl">Structure</span>
+        <span class="hs">Simplicity</span>
+      </div>
+    </div>
+
+    <div class="history" id="historyBlock">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:8px 0">Last 10 Tests</h3>
+        <div><button id="clearHistoryBtn" class="btn alt" style="padding:8px 10px;font-weight:700">Clear History</button></div>
+      </div>
+      <div id="historyList"></div>
+    </div>
+
   </div>
+</div>
 
 <script>
-const POWER = ["unlock","boost","dominate","supercharge","ignite","amplify","explode","unleash","skyrocket","crush","master","conquer","accelerate","maximize","transform","revolutionize","optimize","surge","charge","turbo"];
-const EMOTIONAL = ["amazing","incredible","astonishing","heartfelt","uplifting","thrilling","breathtaking","touching","inspiring","joyful","passion","delight","stunning","moving","wonderful","magical","surprising","hopeful","uplift","wow"];
-const ACTION_VERBS = ["unlock","boost","learn","discover","get","build","create","grow","save","increase","improve","transform","start","master","claim","join","register","download","use","explains","explained","explain"];
-const audienceList = ["fundraiser","fundraisers","donor","donors","charity","charities","marketer","marketers","runner","runners","parent","parents","teacher","teachers","startup","founder","founders"];
+const POWER=["unlock","boost","dominate","supercharge","ignite","amplify","explode","unleash","skyrocket","crush","master","conquer","accelerate","maximize","transform","revolutionize","optimize","surge","charge","turbo"];
+const EMOTIONAL=["amazing","incredible","astonishing","heartfelt","uplifting","thrilling","breathtaking","touching","inspiring","joyful","passion","delight","stunning","moving","wonderful","magical","surprising","hopeful","uplift","wow"];
+const ACTION_VERBS=["unlock","boost","learn","discover","get","build","create","grow","save","increase","improve","transform","start","master","claim","join","register","download","use","explains","explained","explain"];
+const audienceList=["fundraiser","fundraisers","donor","donors","charity","charities","marketer","marketers","runner","runners","parent","parents","teacher","teachers","startup","founder","founders"];
 
-function wordCount(text){ return (text.trim().split(/\s+/).filter(Boolean)).length; }
-function charCount(text){ return String(text||"").length; }
-function occurrenceCount(text, arr){ const t=text.toLowerCase(); let c=0; for(const a of arr){ const re=new RegExp("\\b"+a+"\\b","gi"); const m=t.match(re); if(m) c+=m.length;} return c; }
-function uniqueMatchCount(text, arr){ const t=text.toLowerCase(); const set=new Set(); for(const a of arr){ const re=new RegExp("\\b"+a+"\\b","gi"); const m=t.match(re); if(m) set.add(a.toLowerCase());} return set.size;}
+function wordCount(text){return text.trim().split(/\s+/).filter(Boolean).length;}
+function charCount(text){return text.length;}
+function occurrenceCount(text,arr){const t=text.toLowerCase();let c=0;for(const a of arr){const m=t.match(new RegExp("\\b"+a+"\\b","gi"));if(m)c+=m.length;}return c;}
+function uniqueMatchCount(text,arr){const t=text.toLowerCase();const set=new Set();for(const a of arr){const m=t.match(new RegExp("\\b"+a+"\\b","gi"));if(m) set.add(a.toLowerCase());}return set.size;}
 
 function scoreHeadlineMI(text){
-  const raw = String(text||"").trim();
-  const lower = raw.toLowerCase();
-  const wc = wordCount(raw);
-  const cc = charCount(raw);
+  const raw=text.trim(), lower=raw.toLowerCase();
+  const wc=wordCount(raw), cc=charCount(raw);
 
   // LENGTH 40 pts
   let lengthPoints=0;
-  if(cc>=48 && cc<=90 && wc>=6 && wc<=16) lengthPoints=40;
+  if(cc>=45 && cc<=100 && wc>=5 && wc<=25) lengthPoints=40;
   else{
-    let charScore=0;
-    if(cc>=40 && cc<=100){ const center=62; const dist=Math.abs(cc-center); charScore=Math.max(0, Math.round(30*(1-Math.min(dist/30,1)))); }
-    let wordScore=0;
-    if(wc>=4 && wc<=16){ const ideal=9; const distW=Math.abs(wc-ideal); wordScore=Math.max(0, Math.round(10*(1-Math.min(distW/7,1)))); }
+    const charScore=Math.max(0, Math.round(40*(1-Math.min(Math.abs(cc-70)/30,1))));
+    const wordScore=Math.max(0, Math.round(10*(1-Math.min(Math.abs(wc-10)/15,1))));
     lengthPoints=charScore+wordScore;
   }
 
-  // STRUCTURE 30 pts
+  // STRUCTURE 35 pts (formula bonus, boosted)
   let structPoints=0;
-  if(/^how\b|^how-to\b/.test(lower)||/^here('|’)s how\b/i.test(raw)) structPoints+=12;
-  if(/^\d+[\.\-]?\s/.test(raw)||/^\d+\s/.test(raw)) structPoints+=8;
-  if(/\:/.test(raw)) structPoints+=6;
+  if(/^here('|’)s how\b/i.test(raw)) structPoints+=25;
+  if(/^how\b/i.test(lower)) structPoints+=18;
+  if(/\d{2,4}/.test(raw)) structPoints+=7;
   if(/\(|\)|\[|\]/.test(raw)) structPoints+=5;
-  if(/\b(why|how|what|when|where)\b/i.test(lower)&&/^[A-Z]/.test(raw.trim())) structPoints+=5;
-  if(/\b(202[3-9]|202[0-9])\b/.test(raw)) structPoints+=5;
-  if(/\b(explains|explained|explaining|interview)\b/i.test(lower)) structPoints+=5;
-  if(/[A-Z][a-z]+ [A-Z][a-z]+/.test(raw)&&raw.indexOf(":")>0) structPoints+=3;
-  structPoints=Math.min(structPoints,30);
+  if(/:/.test(raw)) structPoints+=5;
+  structPoints=Math.min(structPoints,35);
 
-  // CLARITY 15 pts
+  // CLARITY 15 pts (audience + action verbs + "you")
   let clarityPoints=0;
-  if(audienceList.some(a=>new RegExp("\\b"+a+"\\b","i").test(lower))) clarityPoints+=6;
-  if(/\b(why you need|why you must|why you should)\b/i.test(lower)) clarityPoints+=5;
-  clarityPoints+=Math.min(8,occurrenceCount(lower,ACTION_VERBS)*2);
+  if(audienceList.some(a=>new RegExp("\\b"+a+"\\b","i").test(lower))) clarityPoints+=15;
+  clarityPoints+=Math.min(15,occurrenceCount(lower,ACTION_VERBS)*2);
   if(/\b(you|your)\b/i.test(lower)) clarityPoints+=3;
-  if(/\b(how to|guide|checklist|template|step-by-step)\b/i.test(lower)) clarityPoints+=3;
   clarityPoints=Math.min(clarityPoints,15);
 
   // EMOTION/POWER 10 pts
   const emotionPowerPoints=Math.min(10,uniqueMatchCount(lower,POWER)*3 + uniqueMatchCount(lower,EMOTIONAL)*2);
 
   // UNIQUENESS 5 pts
-  const tokens = raw.toLowerCase().split(/\s+/).filter(Boolean).map(t=>t.replace(/[^\w'-]/g,''));
-  const uniqueTokens = new Set(tokens.filter(Boolean));
+  const tokens=raw.toLowerCase().split(/\s+/).map(t=>t.replace(/[^\w'-]/g,''));
+  const uniqueTokens=new Set(tokens.filter(Boolean));
   const uniqRatio = tokens.length?uniqueTokens.size/tokens.length:0;
   const uniquenessPoints = uniqRatio>=0.75?5:uniqRatio>=0.6?3:uniqRatio>=0.45?1:0;
 
-  // SKIMMABILITY PENALTY (reduced)
-  const longWords=tokens.filter(t=>t.length>13).length;
-  const complexWords=tokens.filter(t=>t.length>8).length;
-  const skimmabilityPenalty=Math.min(6,longWords*3+Math.max(0,complexWords-longWords)*1);
+  // SKIMMABILITY PENALTY (minor)
+  const longWords=tokens.filter(t=>t.length>14).length;
+  const complexWords=tokens.filter(t=>t.length>9).length;
+  const skimmabilityPenalty=Math.min(4,longWords*2+Math.max(0,complexWords-longWords));
 
   const rawTotal=lengthPoints+structPoints+clarityPoints+emotionPowerPoints+uniquenessPoints;
   const finalScore=Math.round(Math.max(0,Math.min(100,rawTotal-skimmabilityPenalty)));
 
   const label = finalScore>=80?"Outstanding":finalScore>=70?"Great":finalScore>=50?"Good":finalScore>=30?"Decent":"Poor";
 
+  // HIGHLIGHT
   let highlighted=raw;
   const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
   const replList=(arr,cls)=>{arr.forEach(w=>{highlighted=highlighted.replace(new RegExp("\\b"+esc(w)+"\\b","gi"),match=>`<span class="highlight ${cls}">${match}</span>`);});};
-  replList(POWER,"hp");
-  replList(EMOTIONAL,"he");
+  replList(POWER,"hp"); replList(EMOTIONAL,"he");
   highlighted=highlighted.replace(/\b(20[2-9][0-9])\b/g,'<span class="highlight hl">$1</span>');
   highlighted=highlighted.replace(/\b(how to|here's how|here is how|why you need|why you should|why you must|how)\b/gi,match=>`<span class="highlight hl">${match}</span>`);
   highlighted=highlighted.replace(/(\(|\))/g,'<span class="highlight hl">$1</span>');
@@ -161,15 +146,15 @@ function scoreHeadlineMI(text){
   return {final:finalScore,label,lengthPoints,structPoints,clarityPoints,emotionPowerPoints,uniquenessPoints,skimmabilityPenalty,highlighted};
 }
 
-/* HISTORY */
-const HISTORY_KEY="mi_mimic_history_v2";
+// HISTORY
+const HISTORY_KEY="mi_mimic_history_v4";
 function loadHistory(){try{const r=localStorage.getItem(HISTORY_KEY);return r?JSON.parse(r):[]}catch(e){return[];}}
 function saveHistory(arr){localStorage.setItem(HISTORY_KEY,JSON.stringify(arr.slice(0,10)));}
 function addHistoryItem(headline,scoreObj){const arr=loadHistory();arr.unshift({headline,score:scoreObj.final,label:scoreObj.label,at:new Date().toISOString()});saveHistory(arr);renderHistory();}
 function clearHistory(){localStorage.removeItem(HISTORY_KEY);renderHistory();}
 function renderHistory(){const c=document.getElementById("historyList");c.innerHTML="";const arr=loadHistory();if(arr.length===0){c.innerHTML="<div class='small' style='opacity:0.85'>No history yet — analyze a headline to save it here.</div>";return;}arr.forEach(it=>{const el=document.createElement("div");el.className="history-item";el.innerHTML=`<div class="history-headline">${it.headline}</div><div class="small" style="margin-top:6px">Score: <strong>${it.score}</strong> — ${it.label} • <span style="opacity:0.75">${new Date(it.at).toLocaleString()}</span></div>`;c.appendChild(el);});}
 
-/* UI */
+// UI
 const analyzeBtn=document.getElementById("analyzeBtn");
 const clearBtn=document.getElementById("clearBtn");
 const clearHistoryBtn=document.getElementById("clearHistoryBtn");
@@ -185,7 +170,7 @@ function renderResultUI(obj){
   ratingLabelEl.textContent=obj.label;
   metaListEl.innerHTML=`
     <div class="row"><div>Length</div><div>${obj.lengthPoints}/40</div></div>
-    <div class="row"><div>Structure</div><div>${obj.structPoints}/30</div></div>
+    <div class="row"><div>Structure</div><div>${obj.structPoints}/35</div></div>
     <div class="row"><div>Clarity</div><div>${obj.clarityPoints}/15</div></div>
     <div class="row"><div>Emotion/Power</div><div>${obj.emotionPowerPoints}/10</div></div>
     <div class="row"><div>Uniqueness</div><div>${obj.uniquenessPoints}/5</div></div>
