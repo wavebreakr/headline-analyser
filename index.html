@@ -77,49 +77,6 @@
 </div>
 
 <script>
-// -----------------------
-// Daily usage logic
-// -----------------------
-const MAX_DAILY_ANALYSES = 5;
-const usageCounterEl = document.getElementById("usageCounter");
-const analyzeBtn = document.getElementById("analyzeBtn");
-const headlineEl = document.getElementById("headlineInput");
-const scoreBarEl = document.getElementById("scoreBar");
-const resultTextEl = document.getElementById("resultText");
-
-function getUsage() {
-  const data = localStorage.getItem("headlineUsage");
-  if (!data) return { lastDate: null, count: 0 };
-  try { return JSON.parse(data); } catch(e) { return { lastDate: null, count: 0 }; }
-}
-
-function setUsage(usage) { localStorage.setItem("headlineUsage", JSON.stringify(usage)); }
-
-function updateCounter() {
-  const usage = getUsage();
-  const today = new Date().toISOString().slice(0,10);
-  let count = (usage.lastDate === today) ? usage.count : 0;
-  usageCounterEl.textContent = `${count}/${MAX_DAILY_ANALYSES} analyses used today`;
-}
-
-function canAnalyze() {
-  const today = new Date().toISOString().slice(0,10);
-  let usage = getUsage();
-  if(usage.lastDate !== today) usage = { lastDate: today, count: 0 };
-  return usage.count < MAX_DAILY_ANALYSES;
-}
-
-function incrementUsage() {
-  const today = new Date().toISOString().slice(0,10);
-  let usage = getUsage();
-  if(usage.lastDate !== today) usage = { lastDate: today, count: 0 };
-  usage.count += 1;
-  usage.lastDate = today;
-  setUsage(usage);
-  updateCounter();
-}
-
-updateCounter();
 
 // -----------------------
 // Word lists (100 per category, compressed for brevity)
