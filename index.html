@@ -2,46 +2,76 @@
 <html>
 <head>
 <meta charset="UTF-8" />
-<title>Pattern Generator</title>
-
+<title>Pro Pattern Generator</title>
 <style>
-    body {
-        font-family: sans-serif;
-        display: flex;
-        gap: 2rem;
-        padding: 2rem;
-        background: #f4f4f4;
-    }
+body {
+    font-family: sans-serif;
+    display: flex;
+    gap: 2rem;
+    padding: 2rem;
+    background: #f0f0f0;
+}
 
-    #controls {
-        width: 220px;
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
+#controls {
+    width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
 
-    label {
-        display: flex;
-        flex-direction: column;
-        font-size: 14px;
-        gap: .4rem;
-    }
+label {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+}
 
-    #preview {
-        width: 400px;
-        height: 400px;
-        background-size: var(--size) var(--size);
-        background-image:
-            repeating-linear-gradient(
-                var(--angle),
-                var(--color1),
-                var(--color1) calc(var(--thickness) * 1px),
-                var(--color2) calc(var(--thickness) * 1px),
-                var(--color2) calc(var(--thickness) * 2px)
-            );
-        border-radius: 12px;
-        border: 1px solid #ddd;
-    }
+button {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+#previewWrapper {
+    position: relative;
+}
+
+#preview {
+    width: 400px;
+    height: 400px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    background-size: var(--size) var(--size);
+    background-image:
+        repeating-linear-gradient(
+            var(--angle),
+            var(--color1),
+            var(--color1) calc(var(--thickness) * 1px),
+            var(--color2) calc(var(--thickness) * 1px),
+            var(--color2) calc(var(--thickness) * 2px)
+        );
+    animation: spin 60s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Premium overlay */
+#premiumNotice {
+    position: absolute;
+    top: 0; left: 0;
+    width: 400px;
+    height: 400px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 18px;
+    color: #333;
+    display: none;
+}
 </style>
 </head>
 
@@ -72,12 +102,25 @@
         Color 2
         <input id="color2" type="color" value="#ffffff" />
     </label>
+
+    <button id="randomizeBtn">Randomize Pattern</button>
+    <button id="presetBtn">Load “Brand Launch” Pack</button>
+    <button id="downloadBtn">Download PNG (Premium)</button>
 </div>
 
-<div id="preview"></div>
+<div id="previewWrapper">
+    <div id="preview"></div>
+    <div id="premiumNotice">Subscribe to unlock download!</div>
+</div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const root = document.documentElement;
+const premiumNotice = document.getElementById("premiumNotice");
+const downloadBtn = document.getElementById("downloadBtn");
+const preview = document.getElementById("preview");
+
+let isPremium = false; // demo flag
 
 function update() {
     root.style.setProperty("--size", document.getElementById("size").value + "px");
@@ -89,6 +132,43 @@ function update() {
 
 document.querySelectorAll("input").forEach(i => i.addEventListener("input", update));
 update();
+
+// Randomizer
+document.getElementById("randomizeBtn").addEventListener("click", () => {
+    document.getElementById("size").value = Math.floor(Math.random() * 180) + 20;
+    document.getElementById("thickness").value = Math.floor(Math.random() * 20) + 1;
+    document.getElementById("angle").value = Math.floor(Math.random() * 360);
+    document.getElementById("color1").value = '#'+Math.floor(Math.random()*16777215).toString(16);
+    document.getElementById("color2").value = '#'+Math.floor(Math.random()*16777215).toString(16);
+    update();
+});
+
+// Preset Pack: “Brand Launch”
+document.getElementById("presetBtn").addEventListener("click", () => {
+    document.getElementById("size").value = 100;
+    document.getElementById("thickness").value = 8;
+    document.getElementById("angle").value = 30;
+    document.getElementById("color1").value = '#FF4500'; // vibrant brand color
+    document.getElementById("color2").value = '#FFD700'; // gold accent
+    update();
+});
+
+// Download (premium)
+downloadBtn.addEventListener("click", () => {
+    if (!isPremium) {
+        premiumNotice.style.display = "flex"; 
+        return;
+    }
+    html2canvas(preview).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'pattern.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+});
+
+// Demo: unlock premium after 3s
+setTimeout(() => { isPremium = true; premiumNotice.style.display = "none"; }, 3000);
 </script>
 
 </body>
