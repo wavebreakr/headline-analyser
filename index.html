@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Super Confetti Explosion</title>
+<title>Mobile Tilt Card</title>
 <style>
 body {
     margin: 0;
@@ -10,147 +10,120 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: #1a1a1a;
+    background: #111;
     overflow: hidden;
     font-family: sans-serif;
 }
 
-button {
-    padding: 18px 36px;
-    font-size: 22px;
-    border: none;
-    border-radius: 12px;
-    background: #ff4081;
-    color: #fff;
-    cursor: pointer;
-    z-index: 2;
+.card-wrapper {
+    perspective: 1200px;
     position: relative;
 }
 
-canvas {
+.card {
+    width: 300px;
+    height: 400px;
+    background: linear-gradient(135deg,#ff6f61,#ffca3a);
+    border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-size: 28px;
+    font-weight: bold;
+    transform-style: preserve-3d;
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.particle {
     position: absolute;
-    top: 0;
-    left: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
     pointer-events: none;
-    z-index: 1;
 }
 </style>
 </head>
 <body>
 
-<button id="confettiBtn">Celebrate!</button>
-<canvas id="confettiCanvas"></canvas>
+<div class="card-wrapper">
+    <div class="card" id="tiltCard">Touch Me!</div>
+</div>
 
 <script>
-const canvas = document.getElementById("confettiCanvas");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-window.addEventListener("resize", ()=>{
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
-
-const colors = ["#FF595E","#FFCA3A","#8AC926","#1982C4","#6A4C93","#FF6F61","#6A4C93"];
-const shapes = ["rect", "circle", "triangle", "star"];
-const confetti = [];
+const card = document.getElementById("tiltCard");
+const particles = [];
 
 function randomRange(min,max){ return Math.random()*(max-min)+min; }
 
-// Star shape helper
-function drawStar(ctx, r){
-    ctx.beginPath();
-    for(let i=0;i<5;i++){
-        ctx.lineTo(Math.cos((18+i*72)/180*Math.PI)*r, -Math.sin((18+i*72)/180*Math.PI)*r);
-        ctx.lineTo(Math.cos((54+i*72)/180*Math.PI)*(r/2), -Math.sin((54+i*72)/180*Math.PI)*(r/2));
-    }
-    ctx.closePath();
-    ctx.fill();
+// Particle creation
+function createParticle(x,y){
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.style.background = `hsl(${Math.random()*360},80%,60%)`;
+    particle.style.left = x + 'px';
+    particle.style.top = y + 'px';
+    document.body.appendChild(particle);
+    const angle = Math.random()*2*Math.PI;
+    const speed = Math.random()*5+2;
+    let vx = Math.cos(angle)*speed;
+    let vy = Math.sin(angle)*speed;
+    let life = 60;
+    particles.push({el:particle,vx,vy,life});
 }
 
-// Create confetti burst
-function createConfetti(x,y){
-    const count = 150;
-    for(let i=0;i<count;i++){
-        confetti.push({
-            x:x,
-            y:y,
-            vx: randomRange(-10,10),
-            vy: randomRange(-15,-5),
-            r: randomRange(4,12),
-            shape: shapes[Math.floor(Math.random()*shapes.length)],
-            color: colors[Math.floor(Math.random()*colors.length)],
-            rotation: randomRange(0,2*Math.PI),
-            rotationSpeed: randomRange(-0.15,0.15),
-            alpha:1,
-            gravity: 0.3,
-            drift: randomRange(-0.2,0.2),
-            trail: []
-        });
-    }
-}
-
-// Draw loop
-function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    confetti.forEach((c,i)=>{
-        c.vy += c.gravity;
-        c.x += c.vx + c.drift;
-        c.y += c.vy;
-        c.rotation += c.rotationSpeed;
-        c.alpha -= 0.005;
-
-        // trail
-        c.trail.push({x:c.x,y:c.y,alpha:c.alpha});
-        if(c.trail.length>5) c.trail.shift();
-
-        c.trail.forEach((t,j)=>{
-            ctx.globalAlpha = t.alpha*0.3;
-            ctx.fillStyle = c.color;
-            ctx.beginPath();
-            ctx.arc(t.x,t.y,c.r*0.4,0,Math.PI*2);
-            ctx.fill();
-        });
-
-        ctx.globalAlpha = c.alpha;
-        ctx.fillStyle = c.color;
-        ctx.save();
-        ctx.translate(c.x,c.y);
-        ctx.rotate(c.rotation);
-
-        switch(c.shape){
-            case "rect": ctx.fillRect(-c.r/2,-c.r/2,c.r,c.r); break;
-            case "circle": ctx.beginPath(); ctx.arc(0,0,c.r/2,0,Math.PI*2); ctx.fill(); break;
-            case "triangle":
-                ctx.beginPath();
-                ctx.moveTo(0,-c.r/2);
-                ctx.lineTo(c.r/2,c.r/2);
-                ctx.lineTo(-c.r/2,c.r/2);
-                ctx.closePath();
-                ctx.fill();
-                break;
-            case "star":
-                drawStar(ctx, c.r/2);
-                break;
+function animateParticles(){
+    for(let i=particles.length-1;i>=0;i--){
+        const p = particles[i];
+        const rect = p.el.getBoundingClientRect();
+        p.el.style.left = (rect.left + p.vx) + 'px';
+        p.el.style.top = (rect.top + p.vy) + 'px';
+        p.life--;
+        p.vy += 0.2; // gravity
+        p.el.style.opacity = p.life/60;
+        if(p.life<=0){
+            document.body.removeChild(p.el);
+            particles.splice(i,1);
         }
-        ctx.restore();
-
-        if(c.alpha<=0 || c.y>canvas.height+50) confetti.splice(i,1);
-    });
-    requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(animateParticles);
 }
-draw();
+animateParticles();
 
-const button = document.getElementById("confettiBtn");
-button.addEventListener("click", ()=>{
-    const rect = button.getBoundingClientRect();
-    const x = rect.left + rect.width/2;
-    const y = rect.top + rect.height/2;
-    createConfetti(x,y);
+// Touch tilt
+card.addEventListener("touchmove",(e)=>{
+    const touch = e.touches[0];
+    const rect = card.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    const centerX = rect.width/2;
+    const centerY = rect.height/2;
+
+    const rotateX = ((y - centerY)/centerY) * 15;
+    const rotateY = ((x - centerX)/centerX) * 15;
+    card.style.transform = `rotateX(${-rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
 });
 
-// Optional: auto bursts every click
+// Reset on touch end
+card.addEventListener("touchend", ()=>{
+    card.style.transform = "rotateX(0deg) rotateY(0deg) scale(1)";
+});
+
+// Particle burst on tap
+card.addEventListener("touchstart",(e)=>{
+    const touch = e.touches[0];
+    createParticle(touch.clientX, touch.clientY);
+});
+
+// Device orientation tilt (optional)
+window.addEventListener("deviceorientation",(e)=>{
+    const rotateX = e.beta/90 * 15; // front/back tilt
+    const rotateY = e.gamma/90 * 15; // left/right tilt
+    card.style.transform = `rotateX(${-rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+});
 </script>
 
 </body>
