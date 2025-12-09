@@ -18,7 +18,7 @@ body{
 .container{width:100%;max-width:920px}
 .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:18px;backdrop-filter:blur(12px);box-shadow:0 18px 50px rgba(0,0,0,0.6)}
 .header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.title{font-weight:800;font-size:18px}
+.title{font-weight:800;font-size:24px}
 .lead{font-size:13px;color:var(--muted)}
 .inputArea{margin-top:12px}
 textarea{width:100%;padding:14px;border-radius:12px;border:none;background:rgba(255,255,255,0.03);color:#fff;resize:none;font-size:16px;min-height:84px}
@@ -36,7 +36,7 @@ textarea{width:100%;padding:14px;border-radius:12px;border:none;background:rgba(
 .label{font-weight:800;text-align:center;margin-top:6px}
 .breakdown{margin-top:12px;font-size:13px;color:var(--muted)}
 .breakdown .row{display:flex;justify-content:space-between;margin-top:8px}
-.highlights{margin-top:12px}
+.highlights{margin-top:48px}
 .highlight{padding:2px 6px;border-radius:6px}
 .hl{background:rgba(255,200,120,0.08)} .hp{background:rgba(150,80,255,0.10)} .he{background:rgba(255,90,130,0.10)} .hs{background:rgba(0,205,255,0.06)} .ha{background:rgba(160,230,160,0.06)}
 .footer{margin-top:12px;font-size:12px;color:rgba(255,255,255,0.6);text-align:center}
@@ -48,10 +48,10 @@ textarea{width:100%;padding:14px;border-radius:12px;border:none;background:rgba(
     <div class="card" role="main" aria-label="Headline Analyzer">
       <div class="header">
         <div>
-          <div class="title">Headline Analyzer — MI-style (final)</div>
-          <div class="lead">Paste a headline, click Analyze. Scoring tuned from your dataset; works across any headline.</div>
+          <div class="title">Headline IQ</div>
+            <br>
+          <div class="lead">Welcome to the fastest headline analyser on the internet. Paste a headline, click Analyze, and don't blink.</div>
         </div>
-        <div class="lead">Structure-first: formulas, clarity, authority, numbers.</div>
       </div>
 
       <div class="inputArea">
@@ -74,28 +74,23 @@ textarea{width:100%;padding:14px;border-radius:12px;border:none;background:rgba(
               <div class="breakdown" id="breakdown" aria-live="polite"></div>
             </div>
           </div>
+        </div>
 
-          <div class="highlights panel" id="highlightsArea">
+          <div class="panel">
             <div style="font-weight:800">Highlights</div>
             <div id="highlights" style="margin-top:8px" class="lead">No highlights yet — analyze a headline.</div>
           </div>
-        </div>
-
-        <div class="panel">
-          <div style="font-weight:800">Why this score</div>
-          <div id="reason" style="margin-top:8px" class="lead">We reward headline formulas (How-to, Here’s How, X Ways), clarity (reader benefit), numbers/years, and authority signals (research, named authors).</div>
-          <div style="margin-top:12px;font-weight:800">Matched patterns</div>
-          <div id="matched" style="margin-top:8px" class="lead">—</div>
+          <div class="panel">
+          <div style="font-weight:800">Why this score?</div>
+          <div id="reason" style="margin-top:8px" class="lead">Headlines are rewarded based on proven formulas, clarity, reader benefit, and authority signals.</div>
         </div>
       </div>
-
-      <div class="footer">If a headline looks off, paste it here and I’ll tweak the tiniest weights. Want the test harness back? Ask and I’ll add it.</div>
     </div>
   </div>
 
 <script>
 /* ===========================
-   JSON wordbanks (editable)
+   JSON wordbanks
    =========================== */
 
 const WORD_BANKS = {
