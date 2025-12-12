@@ -1,202 +1,391 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Readability Analyzer</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Readability Analyzer — Simplify + Highlight</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0 auto;
-        padding: 20px;
-        max-width: 850px;
-        line-height: 1.5;
-    }
-    textarea, .output {
-        width: 100%;
-        padding: 14px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 16px;
-        box-sizing: border-box;
-    }
-    textarea {
-        min-height: 180px;
-        resize: vertical;
-    }
-    button {
-        padding: 10px 16px;
-        font-size: 16px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        margin-top: 12px;
-    }
-    #simplifyBtn { background: #0077ff; color: #fff; }
-    .section { margin-top: 24px; }
-    .stats span { display: block; margin-bottom: 4px; }
+  :root{
+    --bg:#071017; --card: rgba(255,255,255,0.03); --accent:#7dd3fc;
+    --text:#e6f0f8; --muted:rgba(230,240,248,0.6);
+    --removed-bg: rgba(255,80,80,0.10);
+    --added-bg: rgba(80,200,120,0.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:18px;font-family:-apple-system,BlinkMacSystemFont,"Inter",system-ui,Roboto,Arial;background:linear-gradient(135deg,#071017,#0b1830);color:var(--text)}
+  .wrap{max-width:980px;margin:0 auto}
+  h1{margin:0 0 8px;font-size:20px}
+  .grid{display:flex;gap:16px;align-items:flex-start}
+  .left{flex:1}
+  .right{width:360px}
+  textarea{width:100%;min-height:180px;padding:12px;border-radius:10px;border:none;background:rgba(255,255,255,0.03);color:var(--text);font-size:15px;resize:vertical}
+  .panel{background:var(--card);padding:12px;border-radius:10px;margin-bottom:12px}
+  button{background:linear-gradient(90deg,var(--accent),#8c5bff);border:none;padding:10px 12px;border-radius:8px;font-weight:700;color:#021;cursor:pointer}
+  .secondary{background:rgba(255,255,255,0.06);color:#fff}
+  .small{font-size:13px;color:var(--muted)}
+  .output{white-space:pre-wrap;padding:12px;border-radius:8px;background:rgba(255,255,255,0.02);min-height:120px}
+  .stats{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .bar{height:10px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden}
+  .bar .fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#8c5bff);transition:width .6s}
+  .hl-veryhard{background:rgba(190,60,250,0.12);padding:2px 6px;border-radius:6px}
+  .hl-adverb{background:rgba(255,200,90,0.10);padding:2px 6px;border-radius:6px}
+  .hl-passive{background:rgba(100,200,160,0.08);padding:2px 6px;border-radius:6px}
+  .removed{background:var(--removed-bg); text-decoration:line-through; color:#ffb6b6; padding:2px 4px; border-radius:4px;}
+  .added{background:var(--added-bg); color:#bfffd0; padding:2px 4px; border-radius:4px;}
+  .comparison { display:flex; gap:12px; margin-top:12px; flex-wrap:wrap; }
+  .col { flex:1; min-width:260px; }
+  .label { font-weight:700; margin-bottom:6px }
+  .actions{display:flex;gap:8px;margin-top:8px}
+  @media(max-width:900px){ .grid{flex-direction:column}.right{width:100%} }
 </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <h1>Readability Analyzer — Simplify & Highlight</h1>
 
-<h2>Readability Analyzer</h2>
-<textarea id="inputText" placeholder="Paste or type text here..."></textarea>
+    <div class="grid">
+      <div class="left">
+        <div class="panel">
+          <textarea id="input" placeholder="Paste or type your text here...">Paste sample text here. Try long sentences and complex words like "utilize" or "commence", then press Simplify.</textarea>
+          <div class="actions">
+            <button id="simplifyBtn">One-Click Simplify</button>
+            <button id="applyBtn" class="secondary">Apply Simplified</button>
+            <button id="revertBtn" class="secondary">Revert</button>
+          </div>
+        </div>
 
-<div class="section stats" id="statsBox">
-    <strong>Live Readability Stats</strong>
-    <span id="grade">Grade Level: —</span>
-    <span id="hardWords">Hard Words: —</span>
-    <span id="longWordPct">Long Word %: —</span>
-    <span id="passive">Passive Voice: —</span>
-    <span id="clarity">Clarity Score: —</span>
-    <span id="skim">Skimmability: —</span>
-</div>
+        <div class="panel">
+          <div class="label">Comparison (Before → After)</div>
+          <div class="comparison">
+            <div class="col">
+              <div class="small">Original</div>
+              <div id="origPreview" class="output"></div>
+            </div>
+            <div class="col">
+              <div class="small">Simplified (highlighted)</div>
+              <div id="simplifiedPreview" class="output"></div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<button id="simplifyBtn">One-Click Simplify</button>
+      <div class="right">
+        <div class="panel">
+          <div class="small">Flesch Reading Ease (original)</div>
+          <div id="readingEase" style="font-weight:800">—</div>
 
-<div class="section">
-    <strong>Simplified Text</strong>
-    <div class="output" id="outputText"></div>
-</div>
+          <div style="margin-top:10px" class="small">Flesch–Kincaid Grade (original)</div>
+          <div id="fkGrade" style="font-weight:800">—</div>
+
+          <div style="margin-top:10px"><div class="small">Simplicity</div><div class="bar" style="margin-top:6px"><div id="simpFill" class="fill"></div></div></div>
+
+          <div style="margin-top:10px" class="small">Passive voice (original)</div>
+          <div id="passivePct" style="font-weight:800;margin-top:6px">—</div>
+
+          <div style="margin-top:10px" class="small">Quick stats (original)</div>
+          <div id="quick" class="small" style="margin-top:6px">Words: — • Sentences: — • Hard words: —</div>
+        </div>
+
+        <div class="panel">
+          <div class="small">Simplified stats (after simplify)</div>
+          <div id="readingEaseSimple" style="font-weight:800">—</div>
+          <div style="margin-top:8px" class="small">Flesch–Kincaid Grade</div>
+          <div id="fkGradeSimple" style="font-weight:800">—</div>
+          <div style="margin-top:8px" class="small">Passive (after)</div>
+          <div id="passivePctSimple" style="font-weight:800">—</div>
+          <div style="margin-top:8px" id="quickSimple" class="small">Words: — • Hard words: —</div>
+        </div>
+
+        <div class="panel">
+          <div class="small">Suggestions</div>
+          <div id="suggestions" class="small" style="margin-top:8px">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
 /* -------------------------
-   Utility functions
+   Helpers (sane, deterministic)
 -------------------------- */
-
-function countSyllables(word) {
-    word = word.toLowerCase();
-    if (word.length <= 3) return 1;
-    return (word.match(/[aeiouy]+/g) || []).length;
+function splitSentences(text){
+  return text.match(/[^.!?]+[.!?]?/g)?.map(s=>s.trim()).filter(Boolean) || [];
 }
-
-function isPassive(sentence) {
-    return /\b(is|are|was|were|be|been|being)\s+\w+ed\b/i.test(sentence);
+function wordsArray(text){ return (text.match(/\w+('\w+)?/g) || []); }
+function countSyllables(word){
+  word = (word||"").toLowerCase().replace(/[^a-z]/g,'');
+  if (!word) return 0;
+  if (word.length <= 3) return 1;
+  const matches = word.match(/[aeiouy]{1,2}/g);
+  let syl = matches ? matches.length : 0;
+  if (word.endsWith("e")) syl = Math.max(1, syl - 1);
+  if (word.endsWith("le") && word.length>2 && !/[aeiouy]/.test(word[word.length-3])) syl+=1;
+  return Math.max(1, syl);
 }
-
-function splitSentences(text) {
-    return text.match(/[^.!?]+[.!?]?/g) || [];
+function isComplexWord(w){ return countSyllables(w) >= 3; }
+const toBeRe = /\b(am|is|are|was|were|be|been|being)\b/i;
+function sentenceIsPassive(sent){
+  if (!toBeRe.test(sent)) return false;
+  if (/\b(am|is|are|was|were|be|been|being)\s+(given|told|awarded|chosen|selected|named|seen|shown|provided|created|made|delivered|sent|raised|paid)\b/i.test(sent)) return true;
+  if (/\b(am|is|are|was|were|be|been|being)\b[\s\S]{0,30}\b\w+ed\b/i.test(sent)) return true;
+  return false;
 }
-
-function getWords(text) {
-    return text.toLowerCase().match(/\b[a-zA-Z']+\b/g) || [];
+function fleschReadingEase(totalWords, totalSentences, totalSyllables){
+  if (totalSentences === 0 || totalWords === 0) return 0;
+  const ASL = totalWords / totalSentences;
+  const ASW = totalSyllables / totalWords;
+  return Math.round(206.835 - 1.015 * ASL - 84.6 * ASW);
 }
+function fleschKincaidGrade(totalWords, totalSentences, totalSyllables){
+  if (totalSentences === 0 || totalWords === 0) return 0;
+  const ASL = totalWords / totalSentences;
+  const ASW = totalSyllables / totalWords;
+  return Math.round((0.39 * ASL + 11.8 * ASW - 15.59) * 10) / 10;
+}
+function clamp(n,a,b){ return Math.max(a, Math.min(b, n)); }
 
 /* -------------------------
-   Real-Time Analyzer
+   Simplifier (dictionary + heuristics)
 -------------------------- */
-
-function analyze() {
-    const text = document.getElementById("inputText").value.trim();
-    if (!text) {
-        document.getElementById("grade").textContent = "Grade Level: —";
-        document.getElementById("hardWords").textContent = "Hard Words: —";
-        document.getElementById("longWordPct").textContent = "Long Word %: —";
-        document.getElementById("passive").textContent = "Passive Voice: —";
-        document.getElementById("clarity").textContent = "Clarity Score: —";
-        document.getElementById("skim").textContent = "Skimmability: —";
-        return;
-    }
-
-    const sentences = splitSentences(text);
-    const words = getWords(text);
-
-    const wordCount = words.length;
-    const sentenceCount = sentences.length;
-
-    // Syllables
-    const syllables = words.reduce((s, w) => s + countSyllables(w), 0);
-
-    // Hard words (> 3 syllables)
-    const hardWords = words.filter(w => countSyllables(w) >= 3).length;
-
-    // Long word percentage (> 7 letters)
-    const longWordPct = (words.filter(w => w.length > 7).length / wordCount) * 100;
-
-    // Passive voice
-    const passivePct = (sentences.filter(isPassive).length / sentenceCount) * 100;
-
-    // Grade level (FKGL)
-    const grade = 0.39 * (wordCount / sentenceCount) + 11.8 * (syllables / wordCount) - 15.59;
-
-    // Clarity score (simple heuristic)
-    const clarity = Math.max(0, 100 - (hardWords * 2 + passivePct));
-
-    // Skimmability score
-    const skim = Math.max(0, 100 - longWordPct - (grade * 2));
-
-    document.getElementById("grade").textContent = "Grade Level: " + grade.toFixed(1);
-    document.getElementById("hardWords").textContent = "Hard Words: " + hardWords;
-    document.getElementById("longWordPct").textContent = "Long Word %: " + longWordPct.toFixed(1) + "%";
-    document.getElementById("passive").textContent = "Passive Voice: " + passivePct.toFixed(1) + "%";
-    document.getElementById("clarity").textContent = "Clarity Score: " + clarity.toFixed(0);
-    document.getElementById("skim").textContent = "Skimmability: " + skim.toFixed(0);
-}
-
-document.getElementById("inputText").addEventListener("input", analyze);
-
-/* -------------------------
-   ONE CLICK SIMPLIFY
--------------------------- */
-
-const dictionary = {
-    "utilize": "use",
-    "leverage": "use",
-    "commence": "start",
-    "prioritize": "focus on",
-    "approximately": "about",
-    "in order to": "to",
-    "facilitate": "help",
-    "assistance": "help",
-    "methodology": "method",
-    "comprehensive": "complete",
-    "significant": "big",
-    "demonstrate": "show",
-    "subsequently": "after"
+const REPLACEMENTS = {
+  "utilize":"use","utilizes":"uses","utilized":"used",
+  "leverage":"use","leveraging":"using",
+  "commence":"start","commenced":"started",
+  "prioritize":"focus on","prioritise":"focus on",
+  "approximately":"about",
+  "in order to":"to","in order that":"so that","in order":"to",
+  "facilitate":"help",
+  "assistance":"help",
+  "methodology":"method","methodologies":"methods",
+  "comprehensive":"complete",
+  "significant":"big","significantly":"greatly",
+  "demonstrate":"show","demonstrates":"shows",
+  "subsequently":"after",
+  "ameliorate":"improve","endeavour":"try","endeavouring":"trying"
+};
+const FILLERS = ["really","very","basically","literally","actually","just","perhaps","possibly","fairly","quite"];
+const PASSIVE_VERB_MAP = {
+  "was given":"gave","were given":"gave","was awarded":"awarded","were awarded":"awarded",
+  "was told":"told","were told":"told","was chosen":"chose","were chosen":"chose",
+  "was selected":"selected","were selected":"selected","was provided":"provided","were provided":"provided"
 };
 
-function simplifyText(input) {
-    let text = input;
-
-    // Replace complex words
-    for (const [hard, simple] of Object.entries(dictionary)) {
-        const regex = new RegExp("\\b" + hard + "\\b", "gi");
-        text = text.replace(regex, simple);
-    }
-
-    // Split long sentences
-    const sentences = splitSentences(text).flatMap(s => {
-        if (s.split(" ").length > 18) {
-            return s.split(/,|;/g).map(part => part.trim() + ".");
-        }
-        return s;
-    });
-
-    // Remove filler
-    text = sentences.join(" ")
-        .replace(/\b(really|very|basically|literally|actually)\b/gi, "")
-        .replace(/\s+/g, " ")
-        .trim();
-
-    // Fix passive voice (simple attempt)
-    text = text.replace(/\bwas (\w+ed)\b/gi, "used to $1");
-
-    return text;
+function splitLongSentenceByWords(sentence, maxWords=16){
+  const tokens = sentence.split(/\s+/).filter(Boolean);
+  if (tokens.length <= maxWords) return [sentence];
+  const chunks=[];
+  for (let i=0;i<tokens.length;i+=maxWords) chunks.push(tokens.slice(i,i+maxWords).join(" ").trim() + (i+maxWords < tokens.length ? "." : ""));
+  return chunks;
 }
 
-document.getElementById("simplifyBtn").addEventListener("click", () => {
-    const input = document.getElementById("inputText").value.trim();
-    if (!input) return;
+function simplifyText(input){
+  if (!input) return "";
+  let text = input;
 
-    const output = simplifyText(input);
-    document.getElementById("outputText").textContent = output;
+  // 1) replacements (word-boundary, preserve capitalization)
+  for (const [k,v] of Object.entries(REPLACEMENTS)){
+    const re = new RegExp("\\b" + k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + "\\b","gi");
+    text = text.replace(re, (m) => {
+      if (m[0] === m[0].toUpperCase()) return v[0].toUpperCase() + v.slice(1);
+      return v;
+    });
+  }
 
-    // Re-run stats on simplified text
-    document.getElementById("inputText").value = output;
-    analyze();
+  // 2) split long sentences by commas/; or by word chunks
+  const sentences = splitSentences(text);
+  const newS=[];
+  for (const s of sentences){
+    const wc = s.split(/\s+/).filter(Boolean).length;
+    if (wc > 18){
+      const parts = s.split(/[,;]+/).map(p=>p.trim()).filter(Boolean);
+      if (parts.length > 1 && parts.every(p => p.split(/\s+/).length < wc)) parts.forEach(p=> newS.push(p + (/[.!?]$/.test(p)?'':'."'))); 
+      else splitLongSentenceByWords(s,14).forEach(p => newS.push(p));
+    } else newS.push(s);
+  }
+  text = newS.join(" ").replace(/\s+/g,' ').trim();
+
+  // 3) remove fillers
+  const fillerRe = new RegExp("\\b(" + FILLERS.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join("|") + ")\\b","gi");
+  text = text.replace(fillerRe, "").replace(/\s{2,}/g,' ').trim();
+
+  // 4) convert passive idioms
+  for (const [k,v] of Object.entries(PASSIVE_VERB_MAP)){
+    const re = new RegExp("\\b" + k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + "\\b","gi");
+    text = text.replace(re, (m)=> m[0]===m[0].toUpperCase() ? v[0].toUpperCase()+v.slice(1) : v);
+  }
+  // 5) "was Xed by Y" -> "Y Xed"
+  text = text.replace(/\bwas\s+(\w+ed)\s+by\s+([A-Z][a-zA-Z0-9_ ]+)/g, (m,p1,p2)=> `${p2} ${p1}`);
+
+  // 6) cleanup
+  text = text.replace(/\s+([.,!?;:])/g,"$1").replace(/\s{2,}/g,' ').trim();
+  return text;
+}
+
+/* -------------------------
+   Word-level diff (LCS)
+-------------------------- */
+function wordDiff(oldText, newText){
+  const a = oldText.trim().split(/\s+/).filter(Boolean);
+  const b = newText.trim().split(/\s+/).filter(Boolean);
+  const n = a.length, m = b.length;
+  // build LCS table
+  const dp = Array.from({length:n+1}, ()=> new Array(m+1).fill(0));
+  for (let i=n-1;i>=0;i--){
+    for (let j=m-1;j>=0;j--){
+      dp[i][j] = (a[i].toLowerCase() === b[j].toLowerCase()) ? (1 + dp[i+1][j+1]) : Math.max(dp[i+1][j], dp[i][j+1]);
+    }
+  }
+  // reconstruct
+  const out = [];
+  let i=0,j=0;
+  while (i<n && j<m){
+    if (a[i].toLowerCase() === b[j].toLowerCase()){
+      out.push({type:'equal', text: a[i]});
+      i++; j++;
+    } else if (dp[i+1][j] >= dp[i][j+1]){
+      out.push({type:'removed', text: a[i]});
+      i++;
+    } else {
+      out.push({type:'added', text: b[j]});
+      j++;
+    }
+  }
+  while (i<n){ out.push({type:'removed', text: a[i]}); i++; }
+  while (j<m){ out.push({type:'added', text: b[j]}); j++; }
+  return out;
+}
+
+/* -------------------------
+   Compute & render metrics
+-------------------------- */
+function computeMetrics(text){
+  const words = wordsArray(text);
+  const sentences = splitSentences(text);
+  const wordCount = words.length;
+  const sentenceCount = sentences.length || 1;
+  const totalSyllables = words.reduce((s,w)=> s + countSyllables(w), 0);
+  const hardWords = words.filter(w => countSyllables(w) >= 3).length;
+  const longWordsPct = wordCount ? Math.round(100 * (words.filter(w => w.length > 7).length / wordCount)) : 0;
+  const passiveCount = sentences.filter(sentenceIsPassive).length;
+  const passivePct = sentenceCount ? Math.round(100 * (passiveCount / sentenceCount)) : 0;
+  const ease = fleschReadingEase(wordCount, sentenceCount, totalSyllables);
+  const fk = fleschKincaidGrade(wordCount, sentenceCount, totalSyllables);
+  const simplicity = Math.round(clamp((ease + (100 - passivePct) * 0.6) / 1.2, 0, 100));
+  return {wordCount, sentenceCount, totalSyllables, hardWords, longWordsPct, passiveCount, passivePct, ease, fk, simplicity};
+}
+
+/* -------------------------
+   UI wiring
+-------------------------- */
+const inputEl = document.getElementById('input');
+const origPreview = document.getElementById('origPreview');
+const simpPreview = document.getElementById('simplifiedPreview');
+const simplifyBtn = document.getElementById('simplifyBtn');
+const applyBtn = document.getElementById('applyBtn');
+const revertBtn = document.getElementById('revertBtn');
+
+let lastOriginal = "";
+let lastSimplified = "";
+
+function renderOriginalPreview(text){
+  origPreview.textContent = text || "(empty)";
+}
+function renderSimplifiedPreviewDiff(original, simplified){
+  if (!simplified) { simpPreview.textContent = "(nothing simplified)"; return; }
+  const diff = wordDiff(original || "", simplified || "");
+  // build HTML
+  const html = diff.map(part => {
+    if (part.type === 'equal') return escapeHtml(part.text) + " ";
+    if (part.type === 'removed') return `<span class="removed">${escapeHtml(part.text)}</span> `;
+    if (part.type === 'added') return `<span class="added">${escapeHtml(part.text)}</span> `;
+  }).join("");
+  simpPreview.innerHTML = html || "(no change)";
+}
+
+function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function updateOriginalStats(){
+  const text = inputEl.value || "";
+  const m = computeMetrics(text);
+  document.getElementById('readingEase').textContent = isNaN(m.ease)?'—':m.ease;
+  document.getElementById('fkGrade').textContent = isNaN(m.fk)?'—':m.fk;
+  document.getElementById('simpFill').style.width = (m.simplicity||0) + "%";
+  document.getElementById('passivePct').textContent = (m.passivePct||0) + "% passive";
+  document.getElementById('quick').textContent = `Words: ${m.wordCount} • Sentences: ${m.sentenceCount} • Hard words: ${m.hardWords}`;
+  // suggestions
+  const suggestions = [];
+  if (m.passivePct > 15) suggestions.push("Reduce passive voice — convert passive sentences to active voice.");
+  if ((m.hardWords / Math.max(1,m.wordCount)) > 0.12) suggestions.push("Replace long multi-syllable words with simpler alternatives.");
+  if (m.longWordsPct > 12) suggestions.push("Limit long words (>7 letters) to improve skimmability.");
+  if (m.ease < 50) suggestions.push("Shorten sentences and use simpler words to improve reading ease.");
+  if (suggestions.length === 0) suggestions.push("Good — text is clear. Consider micro-edits to reach Outstanding readability.");
+  document.getElementById('suggestions').innerHTML = suggestions.map(s=>`<div style="margin-top:6px">• ${s}</div>`).join("");
+}
+
+function updateSimplifiedStats(simplified){
+  if (!simplified) {
+    document.getElementById('readingEaseSimple').textContent = "—";
+    document.getElementById('fkGradeSimple').textContent = "—";
+    document.getElementById('passivePctSimple').textContent = "—";
+    document.getElementById('quickSimple').textContent = "Words: — • Hard words: —";
+    return;
+  }
+  const m = computeMetrics(simplified);
+  document.getElementById('readingEaseSimple').textContent = (isNaN(m.ease)?'—':m.ease);
+  document.getElementById('fkGradeSimple').textContent = (isNaN(m.fk)?'—':m.fk);
+  document.getElementById('passivePctSimple').textContent = (m.passivePct||0) + "% passive";
+  document.getElementById('quickSimple').textContent = `Words: ${m.wordCount} • Hard words: ${m.hardWords}`;
+}
+
+/* initial render */
+inputEl.addEventListener('input', ()=>{
+  lastOriginal = inputEl.value;
+  renderOriginalPreview(lastOriginal);
+  updateOriginalStats();
+  // clear simplified previews when editing original
+  lastSimplified = "";
+  simpPreview.textContent = "(click Simplify to generate)";
+  updateSimplifiedStats("");
 });
-</script>
+window.addEventListener('load', ()=>{
+  lastOriginal = inputEl.value;
+  renderOriginalPreview(lastOriginal);
+  updateOriginalStats();
+  simpPreview.textContent = "(click Simplify to generate)";
+});
 
+simplifyBtn.addEventListener('click', ()=>{
+  lastOriginal = inputEl.value || "";
+  const simplified = simplifyText(lastOriginal);
+  lastSimplified = simplified;
+  renderSimplifiedPreviewDiff(lastOriginal, simplified);
+  updateSimplifiedStats(simplified);
+});
+
+// apply simplified into editor
+applyBtn.addEventListener('click', ()=>{
+  if (!lastSimplified) return;
+  inputEl.value = lastSimplified;
+  lastOriginal = lastSimplified;
+  renderOriginalPreview(lastOriginal);
+  updateOriginalStats();
+  lastSimplified = "";
+  simpPreview.textContent = "(simplified applied)";
+  updateSimplifiedStats("");
+});
+
+// revert to lastOriginal
+revertBtn.addEventListener('click', ()=>{
+  inputEl.value = lastOriginal || "";
+  renderOriginalPreview(lastOriginal || "");
+  updateOriginalStats();
+  lastSimplified = "";
+  simpPreview.textContent = "(reverted)";
+  updateSimplifiedStats("");
+});
+
+/* clamp helper */
+function clamp(n,a,b){ return Math.max(a, Math.min(b, n)); }
+</script>
 </body>
 </html>
