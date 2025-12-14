@@ -19,7 +19,7 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   background: radial-gradient(circle at top, #1a1b1f, #0e0f11);
   color: var(--text);
 }
@@ -41,7 +41,6 @@ body {
 textarea {
   width: 100%;
   min-height: 160px;
-  resize: vertical;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -76,6 +75,16 @@ textarea:focus {
 .metric span {
   font-size: 13px;
   color: var(--muted);
+}
+
+.tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgba(74,222,128,0.2);
+  color: var(--accent);
 }
 
 .actions {
@@ -114,6 +123,12 @@ button:hover {
   padding: 2px 4px;
   border-radius: 6px;
 }
+
+.compare {
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--muted);
+}
 </style>
 </head>
 
@@ -121,7 +136,7 @@ button:hover {
 <div class="container">
   <div class="card">
     <h2>Readability Analyzer</h2>
-    <p class="muted">Paste text to see clarity + simplify it.</p>
+    <p class="muted">Paste text to check clarity and simplify it.</p>
 
     <textarea id="input" placeholder="Paste your text here..."></textarea>
 
@@ -131,11 +146,11 @@ button:hover {
         <span>Words</span>
       </div>
       <div class="metric">
-        <strong id="readingEase">—</strong>
-        <span>Reading Ease</span>
+        <strong id="gradeLevel">—</strong>
+        <span>Reading level</span>
       </div>
       <div class="metric">
-        <strong id="longWords">0%</strong>
+        <strong id="complexWords">0%</strong>
         <span>Complex words</span>
       </div>
       <div class="metric">
@@ -146,9 +161,10 @@ button:hover {
 
     <div class="actions">
       <button onclick="simplify()">One-click simplify</button>
-      <button onclick="resetText()">Reset</button>
+      <button onclick="reset()">Reset</button>
     </div>
 
+    <div id="compare" class="compare" style="display:none;"></div>
     <div id="output" class="output" style="display:none;"></div>
   </div>
 </div>
@@ -168,77 +184,87 @@ const simplifyMap = {
   "demonstrate": "show",
   "objective": "goal",
   "assistance": "help",
+  "individuals": "people",
   "purchase": "buy",
-  "require": "need",
-  "individuals": "people"
+  "require": "need"
 };
 
 const input = document.getElementById("input");
 const output = document.getElementById("output");
+const compare = document.getElementById("compare");
 
 input.addEventListener("input", analyze);
 
 function analyze() {
   const text = input.value.trim();
-  if (!text) {
-    resetMetrics();
-    return;
-  }
+  if (!text) return resetMetrics();
 
   const words = text.match(/\b\w+\b/g) || [];
   document.getElementById("wordCount").textContent = words.length;
 
-  const longWords = words.filter(w => w.length > 8).length;
-  document.getElementById("longWords").textContent =
-    Math.round((longWords / words.length) * 100) + "%";
+  const complex = words.filter(w => w.length > 8).length;
+  document.getElementById("complexWords").textContent =
+    Math.round((complex / words.length) * 100) + "%";
 
   const passive = (text.match(/\b(was|were|is|are|been|being)\b\s+\w+ed\b/gi) || []).length;
   document.getElementById("passiveVoice").textContent =
     Math.min(100, passive * 10) + "%";
 
-  const ease = Math.max(0, Math.min(100, 100 - (longWords * 2)));
-  document.getElementById("readingEase").textContent = ease;
+  updateGrade(text);
+}
+
+function updateGrade(text) {
+  const words = text.match(/\b\w+\b/g) || [];
+  const sentences = text.split(/[.!?]/).filter(Boolean).length || 1;
+
+  const grade = Math.max(1, Math.round(
+    0.39 * (words.length / sentences) + 4
+  ));
+
+  let label = "Excellent";
+  if (grade > 6) label = "Great";
+  if (grade > 8) label = "Good";
+  if (grade > 10) label = "Difficult";
+  if (grade > 12) label = "Very Difficult";
+
+  document.getElementById("gradeLevel").innerHTML =
+    `Grade ${grade} <span class="tag">${label}</span>`;
 }
 
 function simplify() {
   const original = input.value;
   if (!original) return;
 
+  const beforeWords = (original.match(/\b\w+\b/g) || []).length;
+
   let simplified = original;
-  let highlights = [];
 
   Object.entries(simplifyMap)
     .sort((a,b)=>b[0].length-a[0].length)
     .forEach(([from,to]) => {
-      const regex = from.includes(" ")
-        ? new RegExp(from, "gi")
-        : new RegExp(`\\b${from}\\b`, "gi");
-
-      simplified = simplified.replace(regex, match => {
-        highlights.push({from: match, to});
-        return `__${to}__`;
-      });
+      const regex = new RegExp(`\\b${from}\\b`, "gi");
+      simplified = simplified.replace(regex, `<span class="highlight">${to}</span>`);
     });
 
-  highlights.forEach(h => {
-    simplified = simplified.replace(
-      `__${h.to}__`,
-      `<span class="highlight">${h.to}</span>`
-    );
-  });
+  const afterWords = (simplified.replace(/<[^>]+>/g,"").match(/\b\w+\b/g) || []).length;
+
+  compare.innerHTML =
+    `Before: <strong>${beforeWords} words</strong> → After: <strong>${afterWords} words</strong>`;
+  compare.style.display = "block";
 
   output.innerHTML = simplified;
   output.style.display = "block";
 }
 
-function resetText() {
+function reset() {
   output.style.display = "none";
+  compare.style.display = "none";
 }
 
 function resetMetrics() {
-  document.getElementById("wordCount").textContent = 0;
-  document.getElementById("readingEase").textContent = "—";
-  document.getElementById("longWords").textContent = "0%";
+  document.getElementById("wordCount").textContent = "0";
+  document.getElementById("gradeLevel").textContent = "—";
+  document.getElementById("complexWords").textContent = "0%";
   document.getElementById("passiveVoice").textContent = "0%";
 }
 </script>
