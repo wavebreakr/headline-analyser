@@ -1,322 +1,279 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Readable</title>
+  <meta charset="UTF-8" />
+  <title>Readable Text Analyzer</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f7f7f7;
+      padding: 30px;
+      max-width: 900px;
+      margin: auto;
+      color: #222;
+    }
 
-<style>
-  body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #f5f7fb;
-    margin: 0;
-    padding: 24px;
-    color: #111;
-  }
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      padding: 14px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
 
-  .container {
-    max-width: 820px;
-    margin: auto;
-    background: #fff;
-    padding: 24px;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.05);
-  }
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin: 12px 0;
+      flex-wrap: wrap;
+    }
 
-  textarea {
-    width: 100%;
-    min-height: 170px;
-    padding: 14px;
-    border-radius: 12px;
-    border: 1px solid #ddd;
-    font-size: 16px;
-    line-height: 1.6;
-    resize: vertical;
-  }
+    button, select {
+      padding: 10px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
 
-  button {
-    margin-top: 12px;
-    padding: 12px 18px;
-    border-radius: 10px;
-    border: none;
-    background: #111;
-    color: #fff;
-    font-size: 15px;
-    cursor: pointer;
-  }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
 
-  .stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-top: 24px;
-  }
+    .box {
+      background: #fff;
+      padding: 14px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
 
-  .box {
-    background: #f7f9fc;
-    padding: 16px;
-    border-radius: 12px;
-  }
+    .label {
+      font-size: 13px;
+      color: #666;
+    }
 
-  .label {
-    font-size: 13px;
-    color: #666;
-  }
+    .value {
+      font-size: 22px;
+      font-weight: 600;
+    }
 
-  .value {
-    font-size: 17px;
-    font-weight: 600;
-  }
+    .tag {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #eee;
+    }
 
-  .tag {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 4px 8px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-  }
+    .excellent { background: #d1fae5; }
+    .good { background: #e0f2fe; }
+    .okay { background: #fef3c7; }
+    .hard { background: #fee2e2; }
 
-  .excellent { background:#e6f7ec; color:#0b6b3a }
-  .great { background:#eef6ff; color:#0b4ea2 }
-  .good { background:#fff6e5; color:#8a5a00 }
-  .difficult { background:#fdecec; color:#9a1c1c }
+    .diff del {
+      background: #fee2e2;
+      text-decoration: line-through;
+    }
 
-  .output {
-    margin-top: 24px;
-    padding: 16px;
-    border-radius: 12px;
-    background: #fafafa;
-    border: 1px solid #eee;
-  }
-
-  .added {
-    background: #d1fae5;
-    padding: 2px 4px;
-    border-radius: 4px;
-  }
-</style>
+    .diff ins {
+      background: #d1fae5;
+      text-decoration: none;
+    }
+  </style>
 </head>
-
 <body>
-<div class="container">
-  <h2>Readable</h2>
-  <p>Make your writing easier to read — instantly.</p>
 
-  <textarea id="input"></textarea>
-  <button onclick="simplify()">Simplify</button>
+<h1>Readable Text Analyzer</h1>
 
-  <div class="stats">
-    <div class="box">
-      <div class="label">Before</div>
-      <div class="value" id="beforeStats"></div>
-    </div>
-    <div class="box">
-      <div class="label">After</div>
-      <div class="value" id="afterStats"></div>
-    </div>
-  </div>
+<textarea id="inputText" placeholder="Paste your text here..."></textarea>
 
-  <div class="output" id="output"></div>
+<div class="controls">
+  <button onclick="runSimplify()">Simplify</button>
+  <button onclick="runRewrite()">Rewrite</button>
+
+  <select id="targetGrade">
+    <option value="10">Target Grade: 10</option>
+    <option value="8" selected>Target Grade: 8</option>
+    <option value="6">Target Grade: 6</option>
+  </select>
 </div>
 
+<div class="stats">
+  <div class="box">
+    <div class="label">Word count</div>
+    <div class="value" id="wordCount">0 → 0</div>
+  </div>
+
+  <div class="box">
+    <div class="label">Reading level</div>
+    <div class="value" id="readingLevel">
+      Grade 0 → 0 <span class="tag" id="readingTag"></span>
+    </div>
+  </div>
+</div>
+
+<h3>Preview (changes highlighted)</h3>
+<div class="box diff" id="preview"></div>
+
 <script>
-/* ==========================
-   SIMPLIFICATION WORD BANK
-   ========================== */
-
-/* Phrases first (most impact) */
-const phraseReplacements = {
-  "in order to": "to",
-  "due to the fact that": "because",
-  "at this point in time": "now",
-  "with regard to": "about",
-  "in the event that": "if",
-  "prior to": "before",
-  "subsequent to": "after",
-  "a significant number of": "many",
-  "the majority of": "most",
-  "has the ability to": "can",
-  "is able to": "can",
-  "in accordance with": "by",
-  "for the purpose of": "to",
-  "as a result of": "because",
-  "in an effort to": "to",
-  "it is important to note that": "note that",
-  "plays a key role in": "helps",
-  "take into consideration": "consider",
-  "make a decision": "decide",
-  "conduct an analysis": "analyze",
-  "provide assistance": "help",
-  "reach out to": "contact",
-  "move forward with": "start",
-  "has a tendency to": "often",
-  "with the exception of": "except",
-  "on a regular basis": "often",
-  "in terms of": "about"
-};
-
-/* Single-word simplifications */
-const wordReplacements = {
-  "utilize": "use",
-  "facilitate": "help",
-  "implement": "start",
-  "commence": "start",
-  "terminate": "end",
-  "sufficient": "enough",
-  "numerous": "many",
-  "objective": "goal",
-  "demonstrate": "show",
-  "assistance": "help",
-  "individuals": "people",
-  "organizations": "groups",
-  "optimize": "improve",
-  "evaluate": "review",
-  "existing": "current",
-  "approximately": "about",
-  "subsequently": "later",
-  "initially": "first",
-  "ultimately": "finally",
-  "regarding": "about",
-  "therefore": "so",
-  "however": "but",
-  "moreover": "also",
-  "additionally": "also",
-  "nevertheless": "still",
-  "sufficiently": "enough",
-  "frequently": "often",
-  "methodology": "method",
-  "objective": "goal",
-  "strategic": "planned",
-  "leverage": "use",
-  "impactful": "strong",
-  "complexity": "difficulty",
-  "modification": "change",
-  "commonly": "often",
-  "primarily": "mainly",
-  "substantial": "large",
-  "significant": "important",
-  "demonstrates": "shows",
-  "ensures": "makes sure",
-  "attempt": "try",
-  "obtain": "get",
-  "require": "need",
-  "retain": "keep",
-  "assist": "help",
-  "commence": "begin",
-  "conclude": "end",
-  "determine": "decide",
-  "objective": "goal",
-  "utilization": "use"
-};
-
-function simplifyText(text, level) {
-  let simplified = text;
-
-  // 1. Word replacements (already exists)
-  const map = getActiveSimplifyMap(level);
-  Object.keys(map).forEach(word => {
-    const regex = new RegExp(`\\b${word}\\b`, "gi");
-    simplified = simplified.replace(regex, map[word]);
-  });
-
-  // 2. Connector simplification
-  simplified = simplified
-    .replace(/\bwhich\b/gi, ".")
-    .replace(/\bthat enable\b/gi, "help")
-    .replace(/\bin order to\b/gi, "to")
-    .replace(/\bdue to the fact that\b/gi, "because")
-    .replace(/\bhowever\b/gi, "but");
-
-  // 3. Sentence splitting
-  simplified = splitLongSentences(simplified, level);
-
-  // 4. Cleanup
-  simplified = simplified.replace(/\s{2,}/g, " ").trim();
-
-  return simplified;
-}
-
-function splitLongSentences(text, level) {
-  const maxWords =
-    level === 1 ? 20 :
-    level === 2 ? 14 :
-    10;
-
-  return text
-    .split(/([.!?])/)
-    .reduce((acc, part, i, arr) => {
-      if (i % 2 === 0) {
-        const words = part.trim().split(" ");
-        if (words.length > maxWords) {
-          const midpoint = Math.ceil(words.length / 2);
-          return acc + 
-            words.slice(0, midpoint).join(" ") +
-            ". " +
-            words.slice(midpoint).join(" ");
-        }
-        return acc + part;
-      }
-      return acc + part;
-    }, "");
-}
-
-/* ==========================
-   METRICS
-   ========================== */
+/* ------------------------------
+   Core metrics
+------------------------------ */
 
 function wordCount(text) {
   return text.trim() ? text.trim().split(/\s+/).length : 0;
 }
 
+function sentenceCount(text) {
+  return text.split(/[.!?]+/).filter(Boolean).length || 1;
+}
+
+function syllableCount(word) {
+  word = word.toLowerCase();
+  if (word.length <= 3) return 1;
+  word = word.replace(/(?:e$|es$|ed$)/, "");
+  return word.match(/[aeiouy]{1,2}/g)?.length || 1;
+}
+
 function readingGrade(text) {
-  const sentences = Math.max(1, text.split(/[.!?]+/).length);
-  const words = Math.max(1, wordCount(text));
-  const syllables = Math.max(1, text.split(/[aeiouy]+/gi).length);
-  const score = 0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59;
-  return Math.max(1, Math.round(score));
+  const words = text.split(/\s+/).filter(Boolean);
+  const sentences = sentenceCount(text);
+  const syllables = words.reduce((sum, w) => sum + syllableCount(w), 0);
+  return Math.max(
+    0,
+    Math.round(0.39 * (words.length / sentences) + 11.8 * (syllables / words.length) - 15.59)
+  );
 }
 
-function gradeLabel(grade) {
+function readingLabel(grade) {
   if (grade <= 6) return ["Excellent", "excellent"];
-  if (grade <= 8) return ["Great", "great"];
-  if (grade <= 10) return ["Good", "good"];
-  return ["Difficult", "difficult"];
+  if (grade <= 9) return ["Good", "good"];
+  if (grade <= 12) return ["Okay", "okay"];
+  return ["Difficult", "hard"];
 }
 
-function diff(original, simplified) {
-  const oWords = original.split(" ");
-  const sWords = simplified.split(" ");
-  return sWords.map(w =>
-    oWords.includes(w) ? w : `<span class="added">${w}</span>`
+/* ------------------------------
+   Simplification bank
+------------------------------ */
+
+const simplifyMap = {
+  "utilize": "use",
+  "implement": "start",
+  "facilitate": "help",
+  "approximately": "about",
+  "subsequent": "next",
+  "demonstrate": "show",
+  "objective": "goal",
+  "individuals": "people",
+  "assistance": "help",
+  "in order to": "to",
+  "due to the fact that": "because",
+  "prior to": "before",
+  "at this point in time": "now",
+  "commence": "start",
+  "endeavour": "try",
+  "sufficient": "enough",
+  "numerous": "many",
+  "leverage": "use",
+  "strategic": "planned"
+};
+
+/* ------------------------------
+   Rewrite logic
+------------------------------ */
+
+function simplifyText(text, target) {
+  let output = text;
+  for (const [complex, simple] of Object.entries(simplifyMap)) {
+    output = output.replace(new RegExp(`\\b${complex}\\b`, "gi"), simple);
+  }
+
+  if (target <= 6) {
+    output = output
+      .replace(/, which|, that/gi, ".")
+      .replace(/;|:/g, ".");
+  }
+
+  return output;
+}
+
+function rewriteText(text, target) {
+  let sentences = text.split(/[.!?]+/).filter(Boolean);
+
+  sentences = sentences.map(s => {
+    s = s.trim();
+
+    s = s.replace(/^In order to /i, "");
+    s = s.replace(/It is important to note that /i, "");
+    s = s.replace(/There are /i, "");
+
+    if (target <= 6 && s.length > 80) {
+      const mid = Math.floor(s.length / 2);
+      return s.slice(0, mid) + ". " + s.slice(mid);
+    }
+
+    return s;
+  });
+
+  return sentences.join(". ") + ".";
+}
+
+/* ------------------------------
+   Diff
+------------------------------ */
+
+function diffText(oldText, newText) {
+  const oldWords = oldText.split(/\s+/);
+  const newWords = newText.split(/\s+/);
+
+  return newWords.map(w =>
+    oldWords.includes(w) ? w : `<ins>${w}</ins>`
   ).join(" ");
 }
 
-function simplify() {
-  const input = document.getElementById("input").value;
-  const simplified = simplifyText(input);
+/* ------------------------------
+   Actions
+------------------------------ */
 
-  const beforeWC = wordCount(input);
-  const afterWC = wordCount(simplified);
+function updateStats(before, after) {
+  document.getElementById("wordCount").innerText =
+    `${wordCount(before)} → ${wordCount(after)}`;
 
-  const beforeGrade = readingGrade(input);
-  const afterGrade = readingGrade(simplified);
+  const g1 = readingGrade(before);
+  const g2 = readingGrade(after);
 
-  const [bText, bClass] = gradeLabel(beforeGrade);
-  const [aText, aClass] = gradeLabel(afterGrade);
+  const [label, cls] = readingLabel(g2);
 
-  document.getElementById("beforeStats").innerHTML =
-    `Words: ${beforeWC}<br>
-     Reading level: Grade ${beforeGrade}
-     <span class="tag ${bClass}">${bText}</span>`;
+  const tag = document.getElementById("readingTag");
+  tag.textContent = label;
+  tag.className = `tag ${cls}`;
 
-  document.getElementById("afterStats").innerHTML =
-    `Words: ${afterWC}<br>
-     Reading level: Grade ${afterGrade}
-     <span class="tag ${aClass}">${aText}</span>`;
+  document.getElementById("readingLevel").innerHTML =
+    `Grade ${g1} → ${g2} <span class="tag ${cls}">${label}</span>`;
+}
 
-  document.getElementById("output").innerHTML = diff(input, simplified);
+function runSimplify() {
+  const input = document.getElementById("inputText").value;
+  const target = Number(document.getElementById("targetGrade").value);
+
+  const output = simplifyText(input, target);
+
+  document.getElementById("preview").innerHTML = diffText(input, output);
+  updateStats(input, output);
+}
+
+function runRewrite() {
+  const input = document.getElementById("inputText").value;
+  const target = Number(document.getElementById("targetGrade").value);
+
+  const output = rewriteText(input, target);
+
+  document.getElementById("preview").innerHTML = diffText(input, output);
+  updateStats(input, output);
 }
 </script>
+
 </body>
 </html>
