@@ -210,20 +210,55 @@ const wordReplacements = {
   "utilization": "use"
 };
 
-function simplifyText(text) {
+function simplifyText(text, level) {
   let simplified = text;
 
-  for (const phrase in phraseReplacements) {
-    const regex = new RegExp("\\b" + phrase + "\\b", "gi");
-    simplified = simplified.replace(regex, phraseReplacements[phrase]);
-  }
+  // 1. Word replacements (already exists)
+  const map = getActiveSimplifyMap(level);
+  Object.keys(map).forEach(word => {
+    const regex = new RegExp(`\\b${word}\\b`, "gi");
+    simplified = simplified.replace(regex, map[word]);
+  });
 
-  for (const word in wordReplacements) {
-    const regex = new RegExp("\\b" + word + "\\b", "gi");
-    simplified = simplified.replace(regex, wordReplacements[word]);
-  }
+  // 2. Connector simplification
+  simplified = simplified
+    .replace(/\bwhich\b/gi, ".")
+    .replace(/\bthat enable\b/gi, "help")
+    .replace(/\bin order to\b/gi, "to")
+    .replace(/\bdue to the fact that\b/gi, "because")
+    .replace(/\bhowever\b/gi, "but");
+
+  // 3. Sentence splitting
+  simplified = splitLongSentences(simplified, level);
+
+  // 4. Cleanup
+  simplified = simplified.replace(/\s{2,}/g, " ").trim();
 
   return simplified;
+}
+
+function splitLongSentences(text, level) {
+  const maxWords =
+    level === 1 ? 20 :
+    level === 2 ? 14 :
+    10;
+
+  return text
+    .split(/([.!?])/)
+    .reduce((acc, part, i, arr) => {
+      if (i % 2 === 0) {
+        const words = part.trim().split(" ");
+        if (words.length > maxWords) {
+          const midpoint = Math.ceil(words.length / 2);
+          return acc + 
+            words.slice(0, midpoint).join(" ") +
+            ". " +
+            words.slice(midpoint).join(" ");
+        }
+        return acc + part;
+      }
+      return acc + part;
+    }, "");
 }
 
 /* ==========================
