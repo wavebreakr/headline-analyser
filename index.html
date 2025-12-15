@@ -27,12 +27,12 @@
     width: 100%; min-height: 180px; padding: 15px; font-size: 16px; line-height: 1.6;
     border-radius: 12px; box-sizing: border-box; font-family: inherit; resize: vertical;
     background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(255, 255, 255, 0.5);
-    transition: all 0.3s ease; margin-bottom: 10px; /* Reduced margin */
+    transition: all 0.3s ease; margin-bottom: 8px; /* Standard spacing */
   }
   
   textarea:focus { background: white; outline: none; border-color: #42a5f5; }
 
-  .action-area { margin: 20px 0 15px; } /* Adjusted margin */
+  .action-area { margin: 15px 0 15px; }
 
   button {
     width: 100%; padding: 18px; font-size: 18px; font-weight: 700; border: none; border-radius: 12px;
@@ -44,26 +44,37 @@
 
   #outputText { background: rgba(255, 255, 255, 0.5); font-weight: 500; }
   
-  .stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 15px;
+  /* --- NEW STATS AND COPY BUTTON STYLES --- */
+  
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  
+  .word-count {
     font-size: 14px;
-    text-align: center;
+    color: #3949ab;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.5);
+    font-weight: 500;
   }
 
-  .stat {
-    background: rgba(255, 255, 255, 0.5);
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+  #copyButton {
+    padding: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: -5px; /* Pull it slightly closer to the output box */
+    margin-bottom: 15px;
+    background: #42a5f5;
+    box-shadow: 0 2px 5px rgba(66, 165, 245, 0.4);
   }
   
-  .stat strong { color: #1a237e; display: block; font-size: 16px; margin-bottom: 4px; }
-  
-  @media (max-width: 600px) {
-    .stats { grid-template-columns: 1fr; }
+  #copyButton:hover { 
+    background: #1e88e5; 
+    box-shadow: 0 3px 6px rgba(30, 136, 229, 0.5);
   }
 </style>
 </head>
@@ -73,6 +84,9 @@
   <h2>Simplifier</h2>
 
   <textarea id="inputText" placeholder="Paste complex text here..."></textarea>
+  <div class="stat-row">
+    <div class="word-count" id="originalWordCount">Original Words: 0</div>
+  </div>
 
   <div class="action-area">
     <button onclick="runSimplify()">Simplify Now</button>
@@ -80,14 +94,15 @@
 
   <textarea id="outputText" readonly placeholder="Resulting simple text..."></textarea>
   
-  <div class="stats">
-    <div class="stat" id="beforeStats"></div>
-    <div class="stat" id="afterStats"></div>
+  <button id="copyButton" onclick="copyToClipboard()">Copy Simplified Text</button>
+  
+  <div class="stat-row">
+    <div class="word-count" id="simplifiedWordCount">Simplified Words: 0</div>
   </div>
 </div>
 
 <script>
-// Dictionaries remain unchanged from the previous, most aggressive version
+// Dictionaries remain the same (most aggressive version)
 const phraseMap = {
   "in order to": "to", "prior to": "before", "subsequent to": "after", 
   "at this point in time": "now", "at that point in time": "then",
@@ -146,7 +161,7 @@ function runSimplify() {
   simplified = simplifiedLines.join('\n');
   document.getElementById("outputText").value = simplified;
   
-  // *** NEW: Update the stats block ***
+  // Update the stats now that the text is processed
   updateStats(input, simplified);
 }
 
@@ -171,61 +186,43 @@ function simplifyLine(text) {
   return output;
 }
 
+// *** NEW: Copy to Clipboard Function ***
+function copyToClipboard() {
+    const outputTextarea = document.getElementById("outputText");
+    if (outputTextarea.value.trim() === "") {
+        alert("Nothing to copy!");
+        return;
+    }
+    
+    // Select and copy the text
+    outputTextarea.select();
+    outputTextarea.setSelectionRange(0, 99999); // For mobile devices
+    document.execCommand("copy");
+    
+    // Provide user feedback
+    const originalText = document.getElementById("copyButton").innerText;
+    document.getElementById("copyButton").innerText = "Copied! 🎉";
+    setTimeout(() => {
+        document.getElementById("copyButton").innerText = originalText;
+    }, 1500);
+}
+
+
+// ===================================
+// UTILITY FUNCTIONS
+// ===================================
+
 function updateStats(originalText, simplifiedText) {
   const originalWordCount = wordCount(originalText);
   const simplifiedWordCount = wordCount(simplifiedText);
-  
-  let gradeHtml = ""; 
-  // --- OPTIONAL READING LEVEL CODE ---
-  /* const originalGrade = calculateGrade(originalText);
-  const simplifiedGrade = calculateGrade(simplifiedText);
-  gradeHtml = `<br>Grade Level: ${originalGrade} / ${simplifiedGrade}`;
-  */
-  // -----------------------------------
 
-  document.getElementById("beforeStats").innerHTML = 
-    `<strong>Original Text</strong>Words: ${originalWordCount}${gradeHtml}`;
-
-  document.getElementById("afterStats").innerHTML = 
-    `<strong>Simplified Text</strong>Words: ${simplifiedWordCount}${gradeHtml}`;
+  document.getElementById("originalWordCount").innerText = `Original Words: ${originalWordCount}`;
+  document.getElementById("simplifiedWordCount").innerText = `Simplified Words: ${simplifiedWordCount}`;
 }
-
-// ===================================
-// UTILITY FUNCTIONS (Added Word Count)
-// ===================================
 
 function wordCount(text) {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
-
-// -----------------------------------
-// COMMENTED OUT: Reading Grade functions (UNCOMMENT TO ENABLE GRADE LEVEL)
-// -----------------------------------
-
-/*
-function calculateGrade(text) {
-  const words = wordCount(text);
-  const sentences = Math.max(text.split(/[.!?]/).length - 1, 1);
-  const syllables = countSyllables(text);
-  if (words === 0) return 0;
-  const score = 0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59;
-  return Math.max(0, Math.round(score * 10) / 10);
-}
-
-function countSyllables(text) {
-  return text
-    .toLowerCase()
-    .split(/\s+/)
-    .reduce((sum, word) => {
-      word = word.replace(/[^a-z]/g, "");
-      if (word.length <= 3) return sum + 1;
-      const syllables = word.match(/[aeiouy]{1,2}/g);
-      return sum + Math.max(1, (syllables ? syllables.length : 0));
-    }, 0);
-}
-*/
-
-// (Helper functions matchCase, applyReplacements, cleanAndCapitalize remain the same)
 
 function applyReplacements(text, map) {
   let result = text;
