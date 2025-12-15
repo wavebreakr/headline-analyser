@@ -27,12 +27,12 @@
     width: 100%; min-height: 180px; padding: 15px; font-size: 16px; line-height: 1.6;
     border-radius: 12px; box-sizing: border-box; font-family: inherit; resize: vertical;
     background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(255, 255, 255, 0.5);
-    transition: all 0.3s ease;
+    transition: all 0.3s ease; margin-bottom: 10px; /* Reduced margin */
   }
   
   textarea:focus { background: white; outline: none; border-color: #42a5f5; }
 
-  .action-area { margin: 20px 0; }
+  .action-area { margin: 20px 0 15px; } /* Adjusted margin */
 
   button {
     width: 100%; padding: 18px; font-size: 18px; font-weight: 700; border: none; border-radius: 12px;
@@ -42,7 +42,29 @@
 
   button:hover { background: #283593; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26, 35, 126, 0.4); }
 
-  #outputText { margin-top: 10px; background: rgba(255, 255, 255, 0.5); font-weight: 500; }
+  #outputText { background: rgba(255, 255, 255, 0.5); font-weight: 500; }
+  
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 15px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .stat {
+    background: rgba(255, 255, 255, 0.5);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+  
+  .stat strong { color: #1a237e; display: block; font-size: 16px; margin-bottom: 4px; }
+  
+  @media (max-width: 600px) {
+    .stats { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 
@@ -57,9 +79,15 @@
   </div>
 
   <textarea id="outputText" readonly placeholder="Resulting simple text..."></textarea>
+  
+  <div class="stats">
+    <div class="stat" id="beforeStats"></div>
+    <div class="stat" id="afterStats"></div>
+  </div>
 </div>
 
 <script>
+// Dictionaries remain unchanged from the previous, most aggressive version
 const phraseMap = {
   "in order to": "to", "prior to": "before", "subsequent to": "after", 
   "at this point in time": "now", "at that point in time": "then",
@@ -94,38 +122,118 @@ const conjunctionMap = {
   "however": "But", "therefore": "So", "hence": "So", "accordingly": "So"
 };
 
+/* ===========================
+   CORE LOGIC & METRICS
+=========================== */
+
 function runSimplify() {
   const input = document.getElementById("inputText").value;
-  if(!input.trim()) return;
+  let simplified = "";
 
-  const simplified = input.split('\n').map(line => {
+  if(!input.trim()) {
+    document.getElementById("outputText").value = "";
+    updateStats("", "");
+    return;
+  }
+
+  const simplifiedLines = input.split('\n').map(line => {
     if (line.trim().length === 0) return line;
     
-    let out = applyReplacements(line, phraseMap);
-    out = applyReplacements(out, wordMap);
-    
-    // Auto-apply aggressive conjunction splits
-    for (const formal in conjunctionMap) {
-      const regex = new RegExp(",\\s*" + formal + "\\s*", "gi");
-      out = out.replace(regex, ". " + conjunctionMap[formal] + " ");
-    }
-    
-    // Always split long connections
-    out = out.replace(/; ([A-Z])/g, ". $1"); 
-    out = out.replace(/, and /gi, ". "); 
-    out = out.replace(/, but /gi, ". But ");
-    
+    let out = simplifyLine(line);
     return cleanAndCapitalize(out);
-  }).join('\n');
+  });
 
+  simplified = simplifiedLines.join('\n');
   document.getElementById("outputText").value = simplified;
+  
+  // *** NEW: Update the stats block ***
+  updateStats(input, simplified);
 }
+
+function simplifyLine(text) {
+  let output = text;
+
+  // STEP 1: Apply all substitutions
+  output = applyReplacements(output, phraseMap);
+  output = applyReplacements(output, wordMap);
+  
+  // STEP 2: Aggressive Conjunction Splitting
+  for (const formal in conjunctionMap) {
+    const regex = new RegExp(",\\s*" + formal + "\\s*", "gi");
+    output = output.replace(regex, ". " + conjunctionMap[formal] + " ");
+  }
+  
+  // STEP 3: Always split long connections
+  output = output.replace(/; ([A-Z])/g, ". $1"); 
+  output = output.replace(/, and /gi, ". "); 
+  output = output.replace(/, but /gi, ". But ");
+  
+  return output;
+}
+
+function updateStats(originalText, simplifiedText) {
+  const originalWordCount = wordCount(originalText);
+  const simplifiedWordCount = wordCount(simplifiedText);
+  
+  let gradeHtml = ""; 
+  // --- OPTIONAL READING LEVEL CODE ---
+  /* const originalGrade = calculateGrade(originalText);
+  const simplifiedGrade = calculateGrade(simplifiedText);
+  gradeHtml = `<br>Grade Level: ${originalGrade} / ${simplifiedGrade}`;
+  */
+  // -----------------------------------
+
+  document.getElementById("beforeStats").innerHTML = 
+    `<strong>Original Text</strong>Words: ${originalWordCount}${gradeHtml}`;
+
+  document.getElementById("afterStats").innerHTML = 
+    `<strong>Simplified Text</strong>Words: ${simplifiedWordCount}${gradeHtml}`;
+}
+
+// ===================================
+// UTILITY FUNCTIONS (Added Word Count)
+// ===================================
+
+function wordCount(text) {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+// -----------------------------------
+// COMMENTED OUT: Reading Grade functions (UNCOMMENT TO ENABLE GRADE LEVEL)
+// -----------------------------------
+
+/*
+function calculateGrade(text) {
+  const words = wordCount(text);
+  const sentences = Math.max(text.split(/[.!?]/).length - 1, 1);
+  const syllables = countSyllables(text);
+  if (words === 0) return 0;
+  const score = 0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59;
+  return Math.max(0, Math.round(score * 10) / 10);
+}
+
+function countSyllables(text) {
+  return text
+    .toLowerCase()
+    .split(/\s+/)
+    .reduce((sum, word) => {
+      word = word.replace(/[^a-z]/g, "");
+      if (word.length <= 3) return sum + 1;
+      const syllables = word.match(/[aeiouy]{1,2}/g);
+      return sum + Math.max(1, (syllables ? syllables.length : 0));
+    }, 0);
+}
+*/
+
+// (Helper functions matchCase, applyReplacements, cleanAndCapitalize remain the same)
 
 function applyReplacements(text, map) {
   let result = text;
   const keys = Object.keys(map).sort((a, b) => b.length - a.length);
   keys.forEach(key => {
-    const regex = new RegExp((key.split(" ").length === 1 ? "\\b" : "") + key + (key.split(" ").length === 1 ? "\\b" : ""), "gi");
+    const useBoundary = key.split(" ").length === 1;
+    const boundary = useBoundary ? "\\b" : "";
+    const regex = new RegExp(boundary + key + boundary, "gi");
     result = result.replace(regex, (match) => {
       const rep = map[key];
       if (!rep) return "";
