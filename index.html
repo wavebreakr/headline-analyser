@@ -178,8 +178,28 @@ const wordMap = {
   "nevertheless": "but",
   "furthermore": "also",
   "moreover": "also",
-  "regarding": "about"
+  "regarding": "about",
+  "ascertain": "find out", // New Aggressive Verb
+  "ameliorate": "improve", // New Aggressive Verb
+  "delineate": "explain", // New Aggressive Verb
+  "expeditiously": "fast" // New Aggressive Adverb
 };
+
+// *** NEW AGGRESSIVE MAP: Targets verbose structures (Strength 3 only) ***
+const fillerMap = {
+  "the fact that": "",
+  "the reason why": "why",
+  "is indicative of": "shows",
+  "is characterized by": "has",
+  "in connection with": "with",
+  "with the exception of": "except",
+  "of the nature of": "like",
+  "at the time when": "when",
+  "despite the fact that": "although",
+  "it is suggested that": "", // Removes passive introductory fluff
+  "in a satisfactory manner": "well"
+};
+
 
 /* ===========================
    CORE LOGIC
@@ -218,14 +238,19 @@ function simplifyText(text, strength) {
   if (strength >= 2) {
     output = applyReplacements(output, wordMap);
   }
+  
+  // *** 3. NEW AGGRESSIVE STEP: Remove filler/passive structure (Strength 3 only) ***
+  if (strength === 3) {
+      output = applyReplacements(output, fillerMap);
+  }
 
-  // 3. Sentence Splitting (Only on High strength)
+  // 4. Sentence Splitting (Only on High strength)
   // This breaks long sentences at logical conjunctions
   if (strength === 3) {
     output = splitLongSentences(output);
   }
 
-  // 4. Cleanup
+  // 5. Cleanup
   output = cleanPunctuation(output);
   
   return output;
@@ -239,16 +264,24 @@ function applyReplacements(text, map) {
   let result = text;
   
   // Sort keys by length (longest first) so we don't replace substrings incorrectly
-  // e.g. replace "in order to" before "in order"
   const keys = Object.keys(map).sort((a, b) => b.length - a.length);
 
   keys.forEach(key => {
-    // Regex matches whole word boundaries (\b), Case Insensitive (i), Global (g)
-    const regex = new RegExp(`\\b${key}\\b`, "gi");
+    // Regex matches whole word boundaries (\b) only if the key is a phrase/word.
+    // If the key is a structure (like "the fact that"), we skip \b to allow internal matches.
+    const useBoundary = key.split(" ").length === 1;
+    const boundary = useBoundary ? "\\b" : "";
+    
+    // Create Regex
+    const regex = new RegExp(boundary + key + boundary, "gi");
     
     result = result.replace(regex, (match) => {
       const replacement = map[key];
-      return matchCase(match, replacement);
+      // Only try to match case if there's an actual replacement word/phrase
+      if (replacement && replacement.length > 0) {
+        return matchCase(match, replacement);
+      }
+      return replacement; // Returns "" for phrases like "it is suggested that"
     });
   });
   
@@ -256,43 +289,41 @@ function applyReplacements(text, map) {
 }
 
 // Matches the casing of the original word to the replacement
-// e.g. "However" -> "But", "however" -> "but"
 function matchCase(original, replacement) {
-  // If original is all caps (e.g. TITLE), make replacement all caps
+  // Check if original starts with capital, and replacement is a single word
+  if (replacement.split(" ").length === 1 && original[0] === original[0].toUpperCase()) {
+    return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+  }
+  // If original is all caps (e.g. ACRONYM), make replacement all caps
   if (original === original.toUpperCase() && original !== original.toLowerCase()) {
     return replacement.toUpperCase();
   }
-  // If original starts with capital, capitalize replacement
-  if (original[0] === original[0].toUpperCase()) {
-    return replacement.charAt(0).toUpperCase() + replacement.slice(1);
-  }
+  
   // Otherwise lowercase
   return replacement.toLowerCase();
 }
 
 function splitLongSentences(text) {
-  // This replaces specific conjunctions with periods + capitalization
-  // We use a regex that looks for ", and " or "; " etc.
-  
   let result = text;
 
-  // Split on semicolons
-  result = result.replace(/;/g, ".");
+  // Split on semicolons and capital letter after:
+  result = result.replace(/; ([A-Z])/g, ". $1"); 
 
   // Split on "however" or "therefore" in the middle of sentences
   result = result.replace(/, however/gi, ". However");
   result = result.replace(/, therefore/gi, ". Therefore");
 
-  // Split ", and" or ", but" only if the sentence is somewhat long (simple heuristic)
-  // We replace ", and " with ". And "
+  // Split ", and" or ", but"
   result = result.replace(/, and /gi, ". "); 
   result = result.replace(/, but /gi, ". But ");
   
-  // Fix any double punctuation created
   return result;
 }
 
 function cleanPunctuation(text) {
+  // Capitalize after periods, question marks, and exclamation marks
+  text = text.replace(/([.?!]\s*)[a-z]/g, (match, p1) => p1 + match.slice(-1).toUpperCase());
+  
   return text
     .replace(/\s+/g, " ")      // Collapse multiple spaces
     .replace(/\s+\./g, ".")    // Remove space before dot
@@ -314,6 +345,9 @@ function calculateGrade(text) {
   const sentences = Math.max(text.split(/[.!?]/).length - 1, 1);
   const syllables = countSyllables(text);
   
+  // Handle edge case of zero words
+  if (words === 0) return 0;
+  
   // Flesch-Kincaid Grade Level Formula
   const score = 0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59;
   return Math.max(0, Math.round(score * 10) / 10); // Round to 1 decimal
@@ -325,11 +359,16 @@ function countSyllables(text) {
     .split(/\s+/)
     .reduce((sum, word) => {
       word = word.replace(/[^a-z]/g, "");
-      if (word.length <= 3) return sum + 1; // Quick estimate for short words
+      if (word.length <= 3) return sum + 1; // Quick estimate for very short words
+      
+      // Basic vowel group counting, handles most English words well
       const syllables = word.match(/[aeiouy]{1,2}/g);
-      return sum + (syllables ? syllables.length : 1);
+      
+      // Safety check: always assign at least 1 syllable if the word has vowels
+      return sum + Math.max(1, (syllables ? syllables.length : 0));
     }, 0);
 }
 </script>
+
 </body>
 </html>
