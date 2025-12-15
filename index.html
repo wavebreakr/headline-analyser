@@ -1,277 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Readable Text Analyzer</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f7f7f7;
-      padding: 30px;
-      max-width: 900px;
-      margin: auto;
-      color: #222;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Readability Simplifier</title>
 
-    textarea {
-      width: 100%;
-      min-height: 180px;
-      padding: 14px;
-      font-size: 16px;
-      line-height: 1.5;
-    }
+<style>
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 16px;
+    background: #f7f7f7;
+  }
 
-    .controls {
-      display: flex;
-      gap: 12px;
-      margin: 12px 0;
-      flex-wrap: wrap;
-    }
+  h1 {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+  }
 
-    button, select {
-      padding: 10px 14px;
-      font-size: 14px;
-      cursor: pointer;
-    }
+  textarea {
+    width: 100%;
+    min-height: 160px;
+    padding: 12px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+  }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-      margin-top: 20px;
-    }
+  .controls {
+    margin: 16px 0;
+  }
 
-    .box {
-      background: #fff;
-      padding: 14px;
-      border-radius: 6px;
-      border: 1px solid #ddd;
-    }
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    color: #666;
+  }
 
-    .label {
-      font-size: 13px;
-      color: #666;
-    }
+  button {
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
 
-    .value {
-      font-size: 22px;
-      font-weight: 600;
-    }
+  button:active {
+    transform: scale(0.99);
+  }
 
-    .tag {
-      display: inline-block;
-      margin-left: 8px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      background: #eee;
-    }
+  .stats {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
 
-    .excellent { background: #d1fae5; }
-    .good { background: #e0f2fe; }
-    .okay { background: #fef3c7; }
-    .hard { background: #fee2e2; }
+  .stat-box {
+    flex: 1;
+    background: #fff;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+  }
 
-    .diff del {
-      background: #fee2e2;
-      text-decoration: line-through;
-    }
+  .result {
+    margin-top: 16px;
+  }
 
-    .diff ins {
-      background: #d1fae5;
-      text-decoration: none;
-    }
-  </style>
+  .tag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    background: #e0e0e0;
+  }
+</style>
 </head>
+
 <body>
 
-<h1>Readable Text Analyzer</h1>
+<h1>Make writing clearer</h1>
 
-<textarea id="inputText" placeholder="Paste your text here..."></textarea>
+<textarea id="inputText" placeholder="Paste your text here…"></textarea>
 
 <div class="controls">
-  <button onclick="runSimplify()">Simplify</button>
-  <button onclick="runRewrite()">Rewrite</button>
-
-  <select id="targetGrade">
-    <option value="10">Target Grade: 10</option>
-    <option value="8" selected>Target Grade: 8</option>
-    <option value="6">Target Grade: 6</option>
-  </select>
+  <input type="range" id="strength" min="1" max="3" value="2" />
+  <div class="slider-labels">
+    <span>Light</span>
+    <span>Medium</span>
+    <span>Strong</span>
+  </div>
 </div>
+
+<button onclick="simplify()">Make this clearer</button>
 
 <div class="stats">
-  <div class="box">
-    <div class="label">Word count</div>
-    <div class="value" id="wordCount">0 → 0</div>
-  </div>
-
-  <div class="box">
-    <div class="label">Reading level</div>
-    <div class="value" id="readingLevel">
-      Grade 0 → 0 <span class="tag" id="readingTag"></span>
-    </div>
-  </div>
+  <div class="stat-box" id="beforeStats"></div>
+  <div class="stat-box" id="afterStats"></div>
 </div>
 
-<h3>Preview (changes highlighted)</h3>
-<div class="box diff" id="preview"></div>
+<div class="result">
+  <textarea id="outputText" placeholder="Simplified text appears here…"></textarea>
+</div>
 
 <script>
-/* ------------------------------
-   Core metrics
------------------------------- */
+/* ---------- Utilities ---------- */
 
 function wordCount(text) {
-  return text.trim() ? text.trim().split(/\s+/).length : 0;
+  return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-function sentenceCount(text) {
-  return text.split(/[.!?]+/).filter(Boolean).length || 1;
+function sentenceSplit(text) {
+  return text.split(/(?<=[.!?])\s+/);
 }
 
-function syllableCount(word) {
-  word = word.toLowerCase();
-  if (word.length <= 3) return 1;
-  word = word.replace(/(?:e$|es$|ed$)/, "");
-  return word.match(/[aeiouy]{1,2}/g)?.length || 1;
-}
-
+/* VERY rough grade estimate (intentionally aggressive) */
 function readingGrade(text) {
-  const words = text.split(/\s+/).filter(Boolean);
-  const sentences = sentenceCount(text);
-  const syllables = words.reduce((sum, w) => sum + syllableCount(w), 0);
-  return Math.max(
-    0,
-    Math.round(0.39 * (words.length / sentences) + 11.8 * (syllables / words.length) - 15.59)
-  );
+  const words = wordCount(text);
+  const sentences = sentenceSplit(text).length || 1;
+  const avgWords = words / sentences;
+  return Math.max(1, Math.round(avgWords * 0.9));
 }
 
-function readingLabel(grade) {
-  if (grade <= 6) return ["Excellent", "excellent"];
-  if (grade <= 9) return ["Good", "good"];
-  if (grade <= 12) return ["Okay", "okay"];
-  return ["Difficult", "hard"];
+function gradeTag(grade) {
+  if (grade <= 6) return "Excellent";
+  if (grade <= 9) return "Great";
+  if (grade <= 12) return "Good";
+  return "Difficult";
 }
 
-/* ------------------------------
-   Simplification bank
------------------------------- */
+/* ---------- Simplification Engine ---------- */
 
-const simplifyMap = {
-  "utilize": "use",
-  "implement": "start",
-  "facilitate": "help",
-  "approximately": "about",
-  "subsequent": "next",
-  "demonstrate": "show",
-  "objective": "goal",
-  "individuals": "people",
-  "assistance": "help",
-  "in order to": "to",
-  "due to the fact that": "because",
-  "prior to": "before",
-  "at this point in time": "now",
-  "commence": "start",
-  "endeavour": "try",
-  "sufficient": "enough",
-  "numerous": "many",
-  "leverage": "use",
-  "strategic": "planned"
+const simpleMap = {
+  utilize: "use",
+  numerous: "many",
+  facilitate: "help",
+  demonstrate: "show",
+  approximately: "about",
+  individuals: "people",
+  assistance: "help",
+  sufficient: "enough",
+  purchase: "buy",
+  remainder: "rest"
 };
 
-/* ------------------------------
-   Rewrite logic
------------------------------- */
+function replaceWords(text) {
+  let result = text;
+  for (const word in simpleMap) {
+    const regex = new RegExp(`\\b${word}\\b`, "gi");
+    result = result.replace(regex, simpleMap[word]);
+  }
+  return result;
+}
 
-function simplifyText(text, target) {
-  let output = text;
-  for (const [complex, simple] of Object.entries(simplifyMap)) {
-    output = output.replace(new RegExp(`\\b${complex}\\b`, "gi"), simple);
+function simplifyText(text, strength) {
+  let sentences = sentenceSplit(text);
+
+  if (strength >= 2) {
+    sentences = sentences.map(s =>
+      s.replace(/, and|, which|, that|;|—/gi, ".")
+    );
   }
 
-  if (target <= 6) {
-    output = output
-      .replace(/, which|, that/gi, ".")
-      .replace(/;|:/g, ".");
+  if (strength === 3) {
+    sentences = sentences.flatMap(s =>
+      s.split(/and|but|because|which|that/gi)
+    );
   }
+
+  let output = sentences
+    .map(s => s.trim())
+    .filter(Boolean)
+    .join(". ");
+
+  output = replaceWords(output);
+
+  if (!output.endsWith(".")) output += ".";
 
   return output;
 }
 
-function rewriteText(text, target) {
-  let sentences = text.split(/[.!?]+/).filter(Boolean);
+/* ---------- Main ---------- */
 
-  sentences = sentences.map(s => {
-    s = s.trim();
-
-    s = s.replace(/^In order to /i, "");
-    s = s.replace(/It is important to note that /i, "");
-    s = s.replace(/There are /i, "");
-
-    if (target <= 6 && s.length > 80) {
-      const mid = Math.floor(s.length / 2);
-      return s.slice(0, mid) + ". " + s.slice(mid);
-    }
-
-    return s;
-  });
-
-  return sentences.join(". ") + ".";
-}
-
-/* ------------------------------
-   Diff
------------------------------- */
-
-function diffText(oldText, newText) {
-  const oldWords = oldText.split(/\s+/);
-  const newWords = newText.split(/\s+/);
-
-  return newWords.map(w =>
-    oldWords.includes(w) ? w : `<ins>${w}</ins>`
-  ).join(" ");
-}
-
-/* ------------------------------
-   Actions
------------------------------- */
-
-function updateStats(before, after) {
-  document.getElementById("wordCount").innerText =
-    `${wordCount(before)} → ${wordCount(after)}`;
-
-  const g1 = readingGrade(before);
-  const g2 = readingGrade(after);
-
-  const [label, cls] = readingLabel(g2);
-
-  const tag = document.getElementById("readingTag");
-  tag.textContent = label;
-  tag.className = `tag ${cls}`;
-
-  document.getElementById("readingLevel").innerHTML =
-    `Grade ${g1} → ${g2} <span class="tag ${cls}">${label}</span>`;
-}
-
-function runSimplify() {
+function simplify() {
   const input = document.getElementById("inputText").value;
-  const target = Number(document.getElementById("targetGrade").value);
+  const strength = Number(document.getElementById("strength").value);
 
-  const output = simplifyText(input, target);
+  if (!input.trim()) return;
 
-  document.getElementById("preview").innerHTML = diffText(input, output);
-  updateStats(input, output);
-}
+  const beforeGrade = readingGrade(input);
+  const beforeWords = wordCount(input);
 
-function runRewrite() {
-  const input = document.getElementById("inputText").value;
-  const target = Number(document.getElementById("targetGrade").value);
+  const simplified = simplifyText(input, strength);
 
-  const output = rewriteText(input, target);
+  const afterGrade = readingGrade(simplified);
+  const afterWords = wordCount(simplified);
 
-  document.getElementById("preview").innerHTML = diffText(input, output);
-  updateStats(input, output);
+  document.getElementById("outputText").value = simplified;
+
+  document.getElementById("beforeStats").innerHTML = `
+    <strong>Before</strong><br>
+    Reading level: Grade ${beforeGrade}
+    <span class="tag">${gradeTag(beforeGrade)}</span><br>
+    Words: ${beforeWords}
+  `;
+
+  document.getElementById("afterStats").innerHTML = `
+    <strong>After</strong><br>
+    Reading level: Grade ${afterGrade}
+    <span class="tag">${gradeTag(afterGrade)}</span><br>
+    Words: ${afterWords}
+  `;
 }
 </script>
 
