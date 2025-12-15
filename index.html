@@ -76,6 +76,16 @@
     background: #1e88e5; 
     box-shadow: 0 3px 6px rgba(30, 136, 229, 0.5);
   }
+
+  #usageCounter {
+      text-align: right;
+      font-size: 14px;
+      color: #3949ab;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.5);
+      font-weight: 500;
+  }
 </style>
 </head>
 
@@ -86,6 +96,7 @@
   <textarea id="inputText" placeholder="Paste complex text here..."></textarea>
   <div class="stat-row">
     <div class="word-count" id="originalWordCount">Original Words: 0</div>
+    <div class="word-count" id="usageCounter">Free Uses: Loading...</div>
   </div>
 
   <div class="action-area">
@@ -103,9 +114,14 @@
 
 <script>
 // ==========================================
-// THE ULTIMATE DICTIONARY BANK (MAXIMUM AGGRESSION)
+// CONFIGURATION AND DICTIONARY
 // ==========================================
 
+// MONETIZATION CONFIG
+const MAX_DAILY_USES = 10;
+const USAGE_STORAGE_KEY = 'simplifier_daily_usage';
+
+// DICTIONARIES (MAXIMUM AGGRESSION)
 const phraseMap = {
   // Common multi-word formal phrases
   "commencement of": "starting", "utilisation": "use", "endeavor": "try", 
@@ -150,8 +166,6 @@ const wordMap = {
   "consequently": "so", "regarding": "about", "ascertain": "check", 
   "ameliorate": "fix", "delineate": "show", "individuals": "people", 
   "organisations": "groups", "evaluation": "check", 
-  
-  // Nominalizations and formal verbs (NEW)
   "verification": "check", "establishment": "start", "requirements": "rules",
   "commitment": "pledge", "determination": "decision", "necessity": "need",
   "modification": "change", "clarification": "explain", "contingency": "chance",
@@ -160,10 +174,60 @@ const wordMap = {
 };
 
 const conjunctionMap = {
-  // Formal conjunctions to be broken into new sentences
   "furthermore": "Also", "moreover": "Also", "nevertheless": "But", 
   "however": "But", "therefore": "So", "hence": "So", "accordingly": "So"
 };
+
+/* ===========================
+   USAGE COUNTER LOGIC
+=========================== */
+
+function checkUsageLimit() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('dev_mode') === 'true') {
+        document.getElementById('usageCounter').innerText = "DEV MODE: Unlimited";
+        return true; 
+    }
+
+    const today = new Date().toDateString();
+    let usage = JSON.parse(localStorage.getItem(USAGE_STORAGE_KEY));
+
+    if (!usage || usage.date !== today) {
+        usage = { count: 0, date: today };
+    }
+
+    if (usage.count >= MAX_DAILY_USES) {
+        document.getElementById('usageCounter').innerText = `Limit Reached: ${usage.count}/${MAX_DAILY_USES}`;
+        document.getElementById('outputText').value = `You have reached your daily limit of ${MAX_DAILY_USES} free uses. Please check back tomorrow or subscribe for unlimited access!`;
+        return false;
+    }
+
+    usage.count++;
+    localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(usage));
+    
+    document.getElementById('usageCounter').innerText = `Free Uses: ${MAX_DAILY_USES - usage.count} left`;
+
+    return true;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('dev_mode') === 'true') {
+        document.getElementById('usageCounter').innerText = "DEV MODE: Unlimited";
+        return;
+    }
+
+    const today = new Date().toDateString();
+    let usage = JSON.parse(localStorage.getItem(USAGE_STORAGE_KEY));
+
+    if (!usage || usage.date !== today) {
+        usage = { count: 0, date: today };
+    }
+    
+    const remaining = MAX_DAILY_USES - usage.count;
+    document.getElementById('usageCounter').innerText = `Free Uses: ${Math.max(0, remaining)} left`;
+});
+
 
 /* ===========================
    CORE LOGIC & EXECUTION
@@ -171,24 +235,28 @@ const conjunctionMap = {
 
 function runSimplify() {
   const input = document.getElementById("inputText").value;
-  let simplified = "";
+  document.getElementById("outputText").value = "";
 
   if(!input.trim()) {
-    document.getElementById("outputText").value = "";
     updateStats("", "");
     return;
   }
+  
+  if (!checkUsageLimit()) {
+      updateStats(input, "");
+      return;
+  }
 
-  // Iterate line-by-line to preserve paragraphs and lists
   const simplifiedLines = input.split('\n').map(line => {
     if (line.trim().length === 0) return line;
     
     let out = simplifyLine(line);
     out = fixRedundancy(out);
-    return cleanAndCapitalize(out);
+    // NEW: Pass the original line to cleanAndCapitalize to preserve prefixes
+    return cleanAndCapitalize(out, line); 
   });
 
-  simplified = simplifiedLines.join('\n');
+  const simplified = simplifiedLines.join('\n');
   document.getElementById("outputText").value = simplified;
   
   updateStats(input, simplified);
@@ -196,18 +264,14 @@ function runSimplify() {
 
 function simplifyLine(text) {
   let output = text;
-
-  // STEP 1: Apply all vocabulary and phrase substitutions
   output = applyReplacements(output, phraseMap);
   output = applyReplacements(output, wordMap);
   
-  // STEP 2: Aggressive Conjunction Splitting
   for (const formal in conjunctionMap) {
     const regex = new RegExp(",\\s*" + formal + "\\s*", "gi");
     output = output.replace(regex, ". " + conjunctionMap[formal] + " ");
   }
   
-  // STEP 3: Always split long connections
   output = output.replace(/; ([A-Z])/g, ". $1"); 
   output = output.replace(/, and /gi, ". "); 
   output = output.replace(/, but /gi, ". But ");
@@ -216,7 +280,6 @@ function simplifyLine(text) {
 }
 
 function fixRedundancy(text) {
-    // Corrects errors like "highly optimal" or "most best"
     const redundantSuperlatives = ["best", "full", "perfect", "complete", "unique"];
     const redundancyWords = ["most", "very", "highly"]; 
     let result = text;
@@ -240,7 +303,7 @@ function fixRedundancy(text) {
 
 function copyToClipboard() {
     const outputTextarea = document.getElementById("outputText");
-    if (outputTextarea.value.trim() === "") {
+    if (outputTextarea.value.trim() === "" || outputTextarea.value.includes("daily limit")) {
         alert("Nothing to copy!");
         return;
     }
@@ -286,10 +349,33 @@ function applyReplacements(text, map) {
   return result;
 }
 
-function cleanAndCapitalize(text) {
-  text = text.replace(/([.?!]\s*)[a-z]/g, (match, p1) => p1 + match.slice(-1).toUpperCase());
-  if (text.trim().length > 0) text = text.trim().charAt(0).toUpperCase() + text.trim().slice(1);
-  return text.replace(/\s+/g, " ").replace(/\s+\./g, ".").replace(/\.\./g, ".").replace(/\s+,/g, ",").trim();
+/**
+ * NEW LOGIC: Preserves list markers and indentation while correcting sentence capitalization.
+ */
+function cleanAndCapitalize(text, originalLine) {
+  if (!text || text.trim().length === 0) return text;
+  
+  // 1. Capture the list marker/indentation from the original line
+  // Looks for any combination of leading whitespace, dashes, asterisks, or number-dot prefixes
+  const prefixMatch = originalLine.match(/^(\s*[-*]|\s*\d+\.\s*|\s+)/);
+  const prefix = prefixMatch ? prefixMatch[0] : '';
+  
+  // 2. Remove the prefix from the text we are cleaning temporarily
+  let cleanedText = text.trim(); 
+  
+  // 3. Capitalize after periods
+  cleanedText = cleanedText.replace(/([.?!]\s*)[a-z]/g, (match, p1) => p1 + match.slice(-1).toUpperCase());
+  
+  // 4. Capitalize the first letter of the *content*
+  if (cleanedText.length > 0) {
+    cleanedText = cleanedText.charAt(0).toUpperCase() + cleanedText.slice(1);
+  }
+
+  // 5. Final cleanup of spacing and punctuation
+  cleanedText = cleanedText.replace(/\s+/g, " ").replace(/\s+\./g, ".").replace(/\.\./g, ".").replace(/\s+,/g, ",").trim();
+  
+  // 6. Re-apply the captured prefix and return
+  return prefix + cleanedText;
 }
 </script>
 </body>
