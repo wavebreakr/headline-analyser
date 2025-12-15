@@ -3,177 +3,63 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Ultimate Language Simplifier (Liquid Glass)</title>
+<title>Ultimate Language Simplifier</title>
 
 <style>
-  /* Base Setup for Liquid Glass Effect */
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    margin: 0;
-    padding: 0;
-    color: #333;
-    /* Soft Gradient Background: airy and light */
+    margin: 0; padding: 0; color: #333;
     background: linear-gradient(135deg, #e0f7fa 0%, #b3e5fc 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
   }
 
-  /* The main glass container */
   .container {
-    max-width: 720px;
-    width: 90%;
-    margin: 32px auto;
-    padding: 30px;
-    border-radius: 20px;
-    
-    /* Frosted Glass Effect (Glassmorphism) */
-    background: rgba(255, 255, 255, 0.25); /* Translucent White */
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1); /* Subtle 3D shadow */
-    backdrop-filter: blur(8px); /* The Key Blur Effect */
-    -webkit-backdrop-filter: blur(8px);
-    
-    /* Light Border for Shimmer */
-    border: 1px solid rgba(255, 255, 255, 0.4); 
-    /* Subtle internal reflection highlight */
-    position: relative;
-    overflow: hidden; 
+    max-width: 650px; width: 90%; margin: 32px auto; padding: 30px; border-radius: 20px;
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
   }
 
-  /* Add a subtle internal shine/shimmer */
-  .container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 20px;
-    box-shadow: inset 0 0 2000px rgba(255, 255, 255, .5);
-    pointer-events: none;
-  }
-
-  h2 { 
-    margin-top: 0; 
-    color: #1a237e; /* Deep blue title */
-    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
-  }
+  h2 { margin-top: 0; color: #1a237e; text-align: center; font-weight: 700; letter-spacing: -0.5px; }
 
   textarea {
-    width: 100%;
-    min-height: 160px;
-    padding: 15px;
-    font-size: 16px;
-    line-height: 1.6;
-    border-radius: 12px;
-    box-sizing: border-box;
-    font-family: inherit;
-    resize: vertical;
-    margin-bottom: 12px;
-    
-    /* Input Elements also get a glass look */
-    background: rgba(255, 255, 255, 0.7); /* More opaque */
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05); /* Inner shadow for depth */
+    width: 100%; min-height: 180px; padding: 15px; font-size: 16px; line-height: 1.6;
+    border-radius: 12px; box-sizing: border-box; font-family: inherit; resize: vertical;
+    background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(255, 255, 255, 0.5);
     transition: all 0.3s ease;
   }
   
-  textarea:focus {
-    background: white;
-    box-shadow: 0 0 0 2px rgba(100, 181, 246, 0.5); /* Focus highlight */
-    outline: none;
-  }
+  textarea:focus { background: white; outline: none; border-color: #42a5f5; }
 
-  .controls { margin: 25px 0; }
-
-  .slider-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-    color: #1a237e;
-    font-weight: 500;
-    margin-top: 8px;
-  }
-
-  input[type=range] { width: 100%; cursor: pointer; }
+  .action-area { margin: 20px 0; }
 
   button {
-    width: 100%;
-    padding: 16px;
-    font-size: 17px;
-    font-weight: 600;
-    border: none;
-    border-radius: 12px;
-    
-    /* Polished, Solid Button */
-    background: #42a5f5; /* Bright blue */
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(66, 165, 245, 0.4);
-    transition: background 0.2s, box-shadow 0.2s;
+    width: 100%; padding: 18px; font-size: 18px; font-weight: 700; border: none; border-radius: 12px;
+    background: #1a237e; color: white; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(26, 35, 126, 0.3); transition: all 0.2s;
   }
 
-  button:hover { 
-    background: #1e88e5; 
-    box-shadow: 0 6px 12px rgba(30, 136, 229, 0.5);
-  }
+  button:hover { background: #283593; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26, 35, 126, 0.4); }
 
-  .note {
-      margin-top: 25px;
-      padding: 15px;
-      /* Soft translucent note background */
-      background: rgba(255, 255, 255, 0.4);
-      border-radius: 12px;
-      font-size: 14px;
-      color: #3949ab; 
-      border-left: 4px solid #42a5f5;
-  }
-  
-  .note p { margin: 0; line-height: 1.5; }
-
-  @media (max-width: 600px) {
-    .container {
-        width: 100%;
-        margin: 0;
-        border-radius: 0;
-    }
-  }
+  #outputText { margin-top: 10px; background: rgba(255, 255, 255, 0.5); font-weight: 500; }
 </style>
 </head>
 
 <body>
 <div class="container">
+  <h2>Simplifier</h2>
 
-<h2>Ultimate Language Simplifier</h2>
+  <textarea id="inputText" placeholder="Paste complex text here..."></textarea>
 
-<textarea id="inputText" placeholder="Paste your complex text here..."></textarea>
-
-<div class="controls">
-  <input type="range" id="strength" min="1" max="3" value="2" />
-  <div class="slider-labels">
-    <span>Light Splitting (Safe)</span>
-    <span>Medium Splitting</span>
-    <span>Heavy Splitting (Aggressive)</span>
+  <div class="action-area">
+    <button onclick="runSimplify()">Simplify Now</button>
   </div>
-</div>
 
-<button onclick="runSimplify()">Simplify Text</button>
-
-<textarea id="outputText" placeholder="Simplified version appears here..."></textarea>
-
-<div class="note">
-    <p>💡 **Reliability Note:** All vocabulary and phrase substitutions are always active. The slider controls how aggressively sentences are broken apart.</p>
-</div>
-
+  <textarea id="outputText" readonly placeholder="Resulting simple text..."></textarea>
 </div>
 
 <script>
-/* ===========================
-   DICTIONARIES (The Simplification Engine - NO CHANGE)
-=========================== */
-
-// 1. Phrasal Reductions
 const phraseMap = {
   "in order to": "to", "prior to": "before", "subsequent to": "after", 
   "at this point in time": "now", "at that point in time": "then",
@@ -182,154 +68,78 @@ const phraseMap = {
   "in relation to": "about", "in respect of": "about",
   "endeavour to": "try to", "is capable of": "can",
   "has the ability to": "can", "has the capacity to": "can",
-  "there is a need to": "we must", "it is important to note that": "", 
-  "it should be noted that": "", "make use of": "use", 
-  "conduct an evaluation": "evaluate", "take into consideration": "consider", 
-  "provides guidance for": "guides", "give an indication of": "show", 
-  "in the event that": "if"
+  "there is a need to": "we must", 
+  "it is important to note that ": "", "it should be noted that ": "", 
+  "the purpose of this is to ": "", "it has been determined that ": "",
+  "make use of": "use", "conduct an evaluation": "check", 
+  "take into consideration": "consider", "provides guidance for": "guides", 
+  "give an indication of": "show", "in the event that": "if"
 };
 
-// 2. Vocabulary Simplification
 const wordMap = {
   "utilise": "use", "utilising": "using", "utilized": "used", "leverage": "use", 
   "implement": "use", "facilitate": "help", "commence": "start", 
   "commencing": "starting", "demonstrate": "show", "comprehensive": "full", 
   "numerous": "many", "significant": "big", "insufficient": "not enough", 
   "optimal": "best", "approximately": "about", "assistance": "help", 
-  "prioritise": "focus on", "initially": "at first", "ultimately": "in the end", 
+  "prioritise": "focus on", "initially": "first", "ultimately": "lastly", 
   "methodology": "method", "objective": "goal", "discontinue": "stop", 
-  "subsequently": "later", "consequently": "so", "nevertheless": "but", 
-  "furthermore": "also", "moreover": "also", "regarding": "about",
-  "ascertain": "find out", "ameliorate": "improve", "delineate": "explain", 
+  "subsequently": "later", "consequently": "so", "regarding": "about",
+  "ascertain": "check", "ameliorate": "fix", "delineate": "show", 
   "expeditiously": "fast", "individuals": "people", "organisations": "groups"
 };
 
-// 3. Filler and Passive Structure Removal (Aggressive)
-const fillerMap = {
-  "the fact that": "", "the reason why": "why", "is indicative of": "shows",
-  "is characterized by": "has", "in connection with": "with",
-  "with the exception of": "except", "of the nature of": "like",
-  "at the time when": "when", "despite the fact that": "although",
-  "it is suggested that": "", "in a satisfactory manner": "well"
+const conjunctionMap = {
+  "furthermore": "Also", "moreover": "Also", "nevertheless": "But", 
+  "however": "But", "therefore": "So", "hence": "So", "accordingly": "So"
 };
-
-
-/* ===========================
-   CORE LOGIC (Simple and Robust - NO CHANGE)
-=========================== */
 
 function runSimplify() {
   const input = document.getElementById("inputText").value;
-  const strength = Number(document.getElementById("strength").value);
+  if(!input.trim()) return;
 
-  if(!input.trim()) {
-    document.getElementById("outputText").value = "";
-    return;
-  }
-
-  // Split input by line breaks to preserve paragraph and list structure
-  const lines = input.split('\n');
-  
-  // Simplify each line/paragraph separately
-  const simplifiedLines = lines.map(line => {
-    // Only simplify non-empty lines
-    if (line.trim().length > 0) {
-      return simplifyLine(line, strength);
+  const simplified = input.split('\n').map(line => {
+    if (line.trim().length === 0) return line;
+    
+    let out = applyReplacements(line, phraseMap);
+    out = applyReplacements(out, wordMap);
+    
+    // Auto-apply aggressive conjunction splits
+    for (const formal in conjunctionMap) {
+      const regex = new RegExp(",\\s*" + formal + "\\s*", "gi");
+      out = out.replace(regex, ". " + conjunctionMap[formal] + " ");
     }
-    return line; 
-  });
-
-  const simplified = simplifiedLines.join('\n');
+    
+    // Always split long connections
+    out = out.replace(/; ([A-Z])/g, ". $1"); 
+    out = out.replace(/, and /gi, ". "); 
+    out = out.replace(/, but /gi, ". But ");
+    
+    return cleanAndCapitalize(out);
+  }).join('\n');
 
   document.getElementById("outputText").value = simplified;
 }
 
-function simplifyLine(text, strength) {
-  let output = text;
-
-  // STEP 1: Always apply all substitutions
-  output = applyReplacements(output, phraseMap);
-  output = applyReplacements(output, wordMap);
-  output = applyReplacements(output, fillerMap);
-
-  // STEP 2: Control Sentence Splitting
-  if (strength >= 2) {
-    output = splitLongSentences(output, strength);
-  }
-
-  // STEP 3: Final Cleanup
-  output = cleanAndCapitalize(output);
-  
-  return output;
-}
-
-/* ===========================
-   SMART HELPERS (NO CHANGE)
-=========================== */
-
 function applyReplacements(text, map) {
   let result = text;
-  
   const keys = Object.keys(map).sort((a, b) => b.length - a.length);
-
   keys.forEach(key => {
-    const useBoundary = key.split(" ").length === 1;
-    const boundary = useBoundary ? "\\b" : "";
-    
-    const regex = new RegExp(boundary + key + boundary, "gi");
-    
+    const regex = new RegExp((key.split(" ").length === 1 ? "\\b" : "") + key + (key.split(" ").length === 1 ? "\\b" : ""), "gi");
     result = result.replace(regex, (match) => {
-      const replacement = map[key];
-      if (replacement && replacement.length > 0) {
-        return matchCase(match, replacement);
-      }
-      return replacement;
+      const rep = map[key];
+      if (!rep) return "";
+      if (match[0] === match[0].toUpperCase()) return rep.charAt(0).toUpperCase() + rep.slice(1);
+      return rep.toLowerCase();
     });
   });
-  
   return result;
 }
-
-function matchCase(original, replacement) {
-  if (original === original.toUpperCase() && original !== original.toLowerCase()) {
-    return replacement.toUpperCase();
-  }
-  if (original[0] === original[0].toUpperCase()) {
-    return replacement.charAt(0).toUpperCase() + replacement.slice(1);
-  }
-  return replacement.toLowerCase();
-}
-
-function splitLongSentences(text, strength) {
-  let result = text;
-
-  result = result.replace(/; ([A-Z])/g, ". $1"); 
-
-  result = result.replace(/, however/gi, ". However");
-  result = result.replace(/, therefore/gi, ". Therefore");
-  
-  if (strength === 3) {
-      result = result.replace(/, and /gi, ". "); 
-      result = result.replace(/, but /gi, ". But ");
-  }
-  
-  return result;
-}
-
 
 function cleanAndCapitalize(text) {
   text = text.replace(/([.?!]\s*)[a-z]/g, (match, p1) => p1 + match.slice(-1).toUpperCase());
-  
-  if (text.trim().length > 0) {
-      text = text.trim().charAt(0).toUpperCase() + text.trim().slice(1);
-  }
-  
-  return text
-    .replace(/\s+/g, " ")
-    .replace(/\s+\./g, ".")
-    .replace(/\.\./g, ".")
-    .replace(/\s+,/g, ",")
-    .trim();
+  if (text.trim().length > 0) text = text.trim().charAt(0).toUpperCase() + text.trim().slice(1);
+  return text.replace(/\s+/g, " ").replace(/\s+\./g, ".").replace(/\.\./g, ".").replace(/\s+,/g, ",").trim();
 }
 </script>
 </body>
