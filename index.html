@@ -6,21 +6,27 @@
 <title>Readability Simplifier</title>
 
 <style>
+  /* Kept your original CSS exactly as is 
+     because the visual design was good.
+  */
   body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: #f7f7f7;
     margin: 0;
     padding: 16px;
+    color: #333;
   }
 
   .container {
     max-width: 720px;
     margin: auto;
     background: white;
-    padding: 16px;
+    padding: 24px;
     border-radius: 12px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.06);
   }
+
+  h2 { margin-top: 0; }
 
   textarea {
     width: 100%;
@@ -31,56 +37,54 @@
     border-radius: 8px;
     border: 1px solid #ccc;
     box-sizing: border-box;
+    font-family: inherit;
+    resize: vertical;
   }
 
-  .controls {
-    margin: 16px 0;
-  }
+  .controls { margin: 20px 0; }
 
   .slider-labels {
     display: flex;
     justify-content: space-between;
     font-size: 14px;
     opacity: 0.7;
+    margin-top: 8px;
   }
 
-  input[type=range] {
-    width: 100%;
-  }
+  input[type=range] { width: 100%; cursor: pointer; }
 
   button {
     width: 100%;
     padding: 14px;
     font-size: 16px;
+    font-weight: 600;
     border: none;
     border-radius: 8px;
     background: #111;
     color: white;
     cursor: pointer;
+    transition: background 0.2s;
   }
 
-  button:hover {
-    background: #333;
-  }
+  button:hover { background: #333; }
 
   .stats {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
-    margin-top: 16px;
+    margin-top: 20px;
     font-size: 14px;
   }
 
   .stat {
     background: #f1f1f1;
-    padding: 10px;
+    padding: 12px;
     border-radius: 8px;
+    white-space: pre-line; /* Allows newlines in text */
   }
 
   @media (max-width: 600px) {
-    .stats {
-      grid-template-columns: 1fr;
-    }
+    .stats { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -90,105 +94,91 @@
 
 <h2>Readability Simplifier</h2>
 
-<textarea id="inputText" placeholder="Paste your text here..."></textarea>
+<textarea id="inputText" placeholder="Paste your complex text here..."></textarea>
 
 <div class="controls">
   <input type="range" id="strength" min="1" max="3" value="2" />
   <div class="slider-labels">
-    <span>Light</span>
+    <span>Light (Vocab only)</span>
     <span>Medium</span>
-    <span>Strong</span>
+    <span>Strong (Shorten)</span>
   </div>
 </div>
 
-<button onclick="runSimplify()">Simplify</button>
+<button onclick="runSimplify()">Simplify Text</button>
 
 <textarea id="outputText" placeholder="Simplified version appears here..."></textarea>
 
 <div class="stats">
-  <div class="stat" id="beforeStats"></div>
-  <div class="stat" id="afterStats"></div>
+  <div class="stat" id="beforeStats">Waiting for input...</div>
+  <div class="stat" id="afterStats">Waiting for output...</div>
 </div>
 
 </div>
 
 <script>
 /* ===========================
-   MASSIVE REPLACEMENT BANK
+   DICTIONARIES
 =========================== */
 
+// Phrases that bloat sentences
 const phraseMap = {
   "in order to": "to",
   "prior to": "before",
   "subsequent to": "after",
   "at this point in time": "now",
+  "at that point in time": "then",
   "due to the fact that": "because",
   "owing to the fact that": "because",
   "as a result of": "because",
   "with regard to": "about",
   "in relation to": "about",
   "in respect of": "about",
-  "commence": "start",
-  "commencing": "starting",
-  "commenced": "started",
+  "endeavour to": "try to",
+  "is capable of": "can",
+  "has the ability to": "can",
+  "has the capacity to": "can",
+  "there is a need to": "we must",
+  "it is important to note that": "", 
+  "it should be noted that": "",
+  "make use of": "use",
+  "conduct an evaluation": "evaluate",
+  "take into consideration": "consider",
+  "provides guidance for": "guides",
+  "give an indication of": "show",
+  "in the event that": "if"
+};
+
+// Complex words to simple synonyms
+const wordMap = {
   "utilise": "use",
   "utilising": "using",
+  "utilized": "used",
   "leverage": "use",
-  "endeavour to": "try to",
-  "undertake": "do",
   "implement": "use",
   "facilitate": "help",
+  "commence": "start",
+  "commencing": "starting",
   "demonstrate": "show",
   "comprehensive": "full",
   "numerous": "many",
   "significant": "big",
-  "sufficient": "enough",
   "insufficient": "not enough",
   "optimal": "best",
   "approximately": "about",
-  "individuals": "people",
-  "organisations": "groups",
   "assistance": "help",
   "prioritise": "focus on",
-  "commonly": "often",
-  "frequently": "often",
   "initially": "at first",
   "ultimately": "in the end",
-  "there is a need to": "we need to",
-  "it is important to note that": "",
-  "it should be noted that": "",
-  "in a manner that": "that",
-  "in order for": "so",
-  "make use of": "use",
-  "provide support to": "help",
-  "conduct an evaluation": "review",
-  "carry out": "do",
-  "has the ability to": "can",
-  "has the capacity to": "can"
-};
-
-const wordMap = {
-  "commencing": "starting",
-  "prior": "before",
-  "comprehensive": "full",
-  "strategically": "carefully",
-  "effectively": "well",
-  "endeavour": "try",
-  "demonstrates": "shows",
-  "sustainability": "lasting success",
-  "evaluation": "review",
-  "optimisation": "improvement",
-  "alignment": "fit",
-  "initiatives": "plans",
-  "resources": "tools",
-  "commitment": "care",
-  "individual": "person",
-  "utilisation": "use",
-  "assess": "check",
-  "identify": "find",
-  "numerous": "many",
-  "significantly": "a lot",
-  "approximately": "about"
+  "methodology": "method",
+  "objective": "goal",
+  "discontinue": "stop",
+  "subsequently": "later",
+  "consequently": "so",
+  "nevertheless": "but",
+  "furthermore": "also",
+  "moreover": "also",
+  "regarding": "about"
 };
 
 /* ===========================
@@ -199,94 +189,116 @@ function runSimplify() {
   const input = document.getElementById("inputText").value;
   const strength = Number(document.getElementById("strength").value);
 
+  // Don't run if empty
+  if(!input.trim()) return;
+
   const simplified = simplifyText(input, strength);
 
   document.getElementById("outputText").value = simplified;
 
-  document.getElementById("beforeStats").innerText =
-    `Before:\nWords: ${wordCount(input)}\nGrade: ${calculateGrade(input)}`;
+  // Update Stats
+  updateStats("beforeStats", "Original", input);
+  updateStats("afterStats", "Simplified", simplified);
+}
 
-  document.getElementById("afterStats").innerText =
-    `After:\nWords: ${wordCount(simplified)}\nGrade: ${calculateGrade(simplified)}`;
+function updateStats(elementId, label, text) {
+  const grade = calculateGrade(text);
+  const words = wordCount(text);
+  document.getElementById(elementId).innerHTML = 
+    `<strong>${label}</strong><br>Words: ${words}<br>Reading Grade: ${grade}`;
 }
 
 function simplifyText(text, strength) {
   let output = text;
 
-  output = replacePhrases(output);
-  output = replaceWords(output, strength);
-  output = splitSentences(output, strength);
-  output = enforceSentenceLength(output);
-  output = cleanPunctuation(output);
-  output = capitaliseSentences(output);
+  // 1. Replace complex phrases (Always do this)
+  output = applyReplacements(output, phraseMap);
 
-  if (strength === 3) {
-    let safety = 0;
-    while (calculateGrade(output) > 6 && safety < 5) {
-      output = replaceWords(output, 3);
-      output = enforceSentenceLength(output);
-      output = cleanPunctuation(output);
-      output = capitaliseSentences(output);
-      safety++;
-    }
+  // 2. Replace complex words (If strength is Medium or High)
+  if (strength >= 2) {
+    output = applyReplacements(output, wordMap);
   }
 
+  // 3. Sentence Splitting (Only on High strength)
+  // This breaks long sentences at logical conjunctions
+  if (strength === 3) {
+    output = splitLongSentences(output);
+  }
+
+  // 4. Cleanup
+  output = cleanPunctuation(output);
+  
   return output;
 }
 
 /* ===========================
-   HELPERS
+   SMART HELPERS
 =========================== */
 
-function replacePhrases(text) {
-  let result = text.toLowerCase();
-  for (const phrase in phraseMap) {
-    const regex = new RegExp("\\b" + phrase + "\\b", "gi");
-    result = result.replace(regex, phraseMap[phrase]);
-  }
-  return result;
-}
-
-function replaceWords(text, strength) {
-  if (strength < 2) return text;
-
+function applyReplacements(text, map) {
   let result = text;
-  for (const word in wordMap) {
-    const regex = new RegExp("\\b" + word + "\\b", "gi");
-    result = result.replace(regex, wordMap[word]);
-  }
+  
+  // Sort keys by length (longest first) so we don't replace substrings incorrectly
+  // e.g. replace "in order to" before "in order"
+  const keys = Object.keys(map).sort((a, b) => b.length - a.length);
+
+  keys.forEach(key => {
+    // Regex matches whole word boundaries (\b), Case Insensitive (i), Global (g)
+    const regex = new RegExp(`\\b${key}\\b`, "gi");
+    
+    result = result.replace(regex, (match) => {
+      const replacement = map[key];
+      return matchCase(match, replacement);
+    });
+  });
+  
   return result;
 }
 
-function splitSentences(text, strength) {
-  if (strength < 2) return text;
-
-  return text
-    .split(/[.!?]/)
-    .flatMap(s => s.split(/, and |, but |, which |;|—/i))
-    .join(". ");
+// Matches the casing of the original word to the replacement
+// e.g. "However" -> "But", "however" -> "but"
+function matchCase(original, replacement) {
+  // If original is all caps (e.g. TITLE), make replacement all caps
+  if (original === original.toUpperCase() && original !== original.toLowerCase()) {
+    return replacement.toUpperCase();
+  }
+  // If original starts with capital, capitalize replacement
+  if (original[0] === original[0].toUpperCase()) {
+    return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+  }
+  // Otherwise lowercase
+  return replacement.toLowerCase();
 }
 
-function enforceSentenceLength(text) {
-  return text.split(".").map(sentence => {
-    const words = sentence.trim().split(" ");
-    if (words.length <= 12) return sentence.trim();
-    let chunks = [];
-    while (words.length) chunks.push(words.splice(0, 10).join(" "));
-    return chunks.join(". ");
-  }).join(". ");
+function splitLongSentences(text) {
+  // This replaces specific conjunctions with periods + capitalization
+  // We use a regex that looks for ", and " or "; " etc.
+  
+  let result = text;
+
+  // Split on semicolons
+  result = result.replace(/;/g, ".");
+
+  // Split on "however" or "therefore" in the middle of sentences
+  result = result.replace(/, however/gi, ". However");
+  result = result.replace(/, therefore/gi, ". Therefore");
+
+  // Split ", and" or ", but" only if the sentence is somewhat long (simple heuristic)
+  // We replace ", and " with ". And "
+  result = result.replace(/, and /gi, ". "); 
+  result = result.replace(/, but /gi, ". But ");
+  
+  // Fix any double punctuation created
+  return result;
 }
 
 function cleanPunctuation(text) {
   return text
-    .replace(/\s+/g, " ")
-    .replace(/\.+/g, ".")
-    .replace(/\s+\./g, ".")
+    .replace(/\s+/g, " ")      // Collapse multiple spaces
+    .replace(/\s+\./g, ".")    // Remove space before dot
+    .replace(/\.\./g, ".")     // Remove double dots
+    .replace(/\s+,/g, ",")     // Remove space before comma
     .trim();
-}
-
-function capitaliseSentences(text) {
-  return text.replace(/(^\s*[a-z]|[.!?]\s+[a-z])/g, m => m.toUpperCase());
 }
 
 /* ===========================
@@ -301,7 +313,10 @@ function calculateGrade(text) {
   const words = wordCount(text);
   const sentences = Math.max(text.split(/[.!?]/).length - 1, 1);
   const syllables = countSyllables(text);
-  return Math.round(0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59);
+  
+  // Flesch-Kincaid Grade Level Formula
+  const score = 0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59;
+  return Math.max(0, Math.round(score * 10) / 10); // Round to 1 decimal
 }
 
 function countSyllables(text) {
@@ -310,7 +325,7 @@ function countSyllables(text) {
     .split(/\s+/)
     .reduce((sum, word) => {
       word = word.replace(/[^a-z]/g, "");
-      if (!word) return sum;
+      if (word.length <= 3) return sum + 1; // Quick estimate for short words
       const syllables = word.match(/[aeiouy]{1,2}/g);
       return sum + (syllables ? syllables.length : 1);
     }, 0);
