@@ -76,16 +76,6 @@
     background: #1e88e5; 
     box-shadow: 0 3px 6px rgba(30, 136, 229, 0.5);
   }
-
-  #usageCounter {
-      text-align: right;
-      font-size: 14px;
-      color: #3949ab;
-      padding: 4px 8px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.5);
-      font-weight: 500;
-  }
 </style>
 </head>
 
@@ -96,7 +86,6 @@
   <textarea id="inputText" placeholder="Paste complex text here..."></textarea>
   <div class="stat-row">
     <div class="word-count" id="originalWordCount">Original Words: 0</div>
-    <div class="word-count" id="usageCounter">Free Uses: Loading...</div>
   </div>
 
   <div class="action-area">
@@ -114,14 +103,9 @@
 
 <script>
 // ==========================================
-// CONFIGURATION AND DICTIONARY
+// THE ULTIMATE DICTIONARY BANK (MAXIMUM AGGRESSION)
 // ==========================================
 
-// MONETIZATION CONFIG
-const MAX_DAILY_USES = 10;
-const USAGE_STORAGE_KEY = 'simplifier_daily_usage';
-
-// DICTIONARIES (MAXIMUM AGGRESSION)
 const phraseMap = {
   // Common multi-word formal phrases
   "commencement of": "starting", "utilisation": "use", "endeavor": "try", 
@@ -179,57 +163,6 @@ const conjunctionMap = {
 };
 
 /* ===========================
-   USAGE COUNTER LOGIC
-=========================== */
-
-function checkUsageLimit() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('dev_mode') === 'true') {
-        document.getElementById('usageCounter').innerText = "DEV MODE: Unlimited";
-        return true; 
-    }
-
-    const today = new Date().toDateString();
-    let usage = JSON.parse(localStorage.getItem(USAGE_STORAGE_KEY));
-
-    if (!usage || usage.date !== today) {
-        usage = { count: 0, date: today };
-    }
-
-    if (usage.count >= MAX_DAILY_USES) {
-        document.getElementById('usageCounter').innerText = `Limit Reached: ${usage.count}/${MAX_DAILY_USES}`;
-        document.getElementById('outputText').value = `You have reached your daily limit of ${MAX_DAILY_USES} free uses. Please check back tomorrow or subscribe for unlimited access!`;
-        return false;
-    }
-
-    usage.count++;
-    localStorage.setItem(USAGE_STORAGE_KEY, JSON.stringify(usage));
-    
-    document.getElementById('usageCounter').innerText = `Free Uses: ${MAX_DAILY_USES - usage.count} left`;
-
-    return true;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('dev_mode') === 'true') {
-        document.getElementById('usageCounter').innerText = "DEV MODE: Unlimited";
-        return;
-    }
-
-    const today = new Date().toDateString();
-    let usage = JSON.parse(localStorage.getItem(USAGE_STORAGE_KEY));
-
-    if (!usage || usage.date !== today) {
-        usage = { count: 0, date: today };
-    }
-    
-    const remaining = MAX_DAILY_USES - usage.count;
-    document.getElementById('usageCounter').innerText = `Free Uses: ${Math.max(0, remaining)} left`;
-});
-
-
-/* ===========================
    CORE LOGIC & EXECUTION
 =========================== */
 
@@ -241,18 +174,14 @@ function runSimplify() {
     updateStats("", "");
     return;
   }
-  
-  if (!checkUsageLimit()) {
-      updateStats(input, "");
-      return;
-  }
 
+  // Iterate line-by-line to preserve paragraphs and lists
   const simplifiedLines = input.split('\n').map(line => {
     if (line.trim().length === 0) return line;
     
     let out = simplifyLine(line);
     out = fixRedundancy(out);
-    // NEW: Pass the original line to cleanAndCapitalize to preserve prefixes
+    // Pass the original line to cleanAndCapitalize to preserve prefixes
     return cleanAndCapitalize(out, line); 
   });
 
@@ -280,6 +209,7 @@ function simplifyLine(text) {
 }
 
 function fixRedundancy(text) {
+    // Corrects errors like "highly optimal" or "most best"
     const redundantSuperlatives = ["best", "full", "perfect", "complete", "unique"];
     const redundancyWords = ["most", "very", "highly"]; 
     let result = text;
@@ -303,7 +233,7 @@ function fixRedundancy(text) {
 
 function copyToClipboard() {
     const outputTextarea = document.getElementById("outputText");
-    if (outputTextarea.value.trim() === "" || outputTextarea.value.includes("daily limit")) {
+    if (outputTextarea.value.trim() === "") {
         alert("Nothing to copy!");
         return;
     }
@@ -350,7 +280,7 @@ function applyReplacements(text, map) {
 }
 
 /**
- * NEW LOGIC: Preserves list markers and indentation while correcting sentence capitalization.
+ * Preserves list markers and indentation while correcting sentence capitalization.
  */
 function cleanAndCapitalize(text, originalLine) {
   if (!text || text.trim().length === 0) return text;
