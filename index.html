@@ -3,12 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Readability Simplifier</title>
+<title>Ultimate Readability Simplifier</title>
 
 <style>
-  /* Kept your original CSS exactly as is 
-     because the visual design was good.
-  */
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: #f7f7f7;
@@ -39,6 +36,7 @@
     box-sizing: border-box;
     font-family: inherit;
     resize: vertical;
+    margin-bottom: 8px;
   }
 
   .controls { margin: 20px 0; }
@@ -68,23 +66,13 @@
 
   button:hover { background: #333; }
 
-  .stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 20px;
-    font-size: 14px;
-  }
-
-  .stat {
-    background: #f1f1f1;
-    padding: 12px;
-    border-radius: 8px;
-    white-space: pre-line; /* Allows newlines in text */
-  }
-
-  @media (max-width: 600px) {
-    .stats { grid-template-columns: 1fr; }
+  .note {
+      margin-top: 20px;
+      padding: 12px;
+      background: #eef;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #555;
   }
 </style>
 </head>
@@ -92,16 +80,16 @@
 <body>
 <div class="container">
 
-<h2>Readability Simplifier</h2>
+<h2>Ultimate Language Simplifier</h2>
 
 <textarea id="inputText" placeholder="Paste your complex text here..."></textarea>
 
 <div class="controls">
   <input type="range" id="strength" min="1" max="3" value="2" />
   <div class="slider-labels">
-    <span>Light (Vocab only)</span>
-    <span>Medium</span>
-    <span>Strong (Shorten)</span>
+    <span>Light Splitting (Safe)</span>
+    <span>Medium Splitting</span>
+    <span>Heavy Splitting (Aggressive)</span>
   </div>
 </div>
 
@@ -109,149 +97,88 @@
 
 <textarea id="outputText" placeholder="Simplified version appears here..."></textarea>
 
-<div class="stats">
-  <div class="stat" id="beforeStats">Waiting for input...</div>
-  <div class="stat" id="afterStats">Waiting for output...</div>
+<div class="note">
+    <p>💡 **Reliability Note:** All vocabulary and phrase substitutions are always active. The slider controls how aggressively sentences are broken apart.</p>
 </div>
 
 </div>
 
 <script>
 /* ===========================
-   DICTIONARIES
+   DICTIONARIES (The Simplification Engine)
 =========================== */
 
-// Phrases that bloat sentences
+// 1. Phrasal Reductions
 const phraseMap = {
-  "in order to": "to",
-  "prior to": "before",
-  "subsequent to": "after",
-  "at this point in time": "now",
-  "at that point in time": "then",
-  "due to the fact that": "because",
-  "owing to the fact that": "because",
-  "as a result of": "because",
-  "with regard to": "about",
-  "in relation to": "about",
-  "in respect of": "about",
-  "endeavour to": "try to",
-  "is capable of": "can",
-  "has the ability to": "can",
-  "has the capacity to": "can",
-  "there is a need to": "we must",
-  "it is important to note that": "", 
-  "it should be noted that": "",
-  "make use of": "use",
-  "conduct an evaluation": "evaluate",
-  "take into consideration": "consider",
-  "provides guidance for": "guides",
-  "give an indication of": "show",
+  "in order to": "to", "prior to": "before", "subsequent to": "after", 
+  "at this point in time": "now", "at that point in time": "then",
+  "due to the fact that": "because", "owing to the fact that": "because", 
+  "as a result of": "because", "with regard to": "about", 
+  "in relation to": "about", "in respect of": "about",
+  "endeavour to": "try to", "is capable of": "can",
+  "has the ability to": "can", "has the capacity to": "can",
+  "there is a need to": "we must", "it is important to note that": "", 
+  "it should be noted that": "", "make use of": "use", 
+  "conduct an evaluation": "evaluate", "take into consideration": "consider", 
+  "provides guidance for": "guides", "give an indication of": "show", 
   "in the event that": "if"
 };
 
-// Complex words to simple synonyms
+// 2. Vocabulary Simplification
 const wordMap = {
-  "utilise": "use",
-  "utilising": "using",
-  "utilized": "used",
-  "leverage": "use",
-  "implement": "use",
-  "facilitate": "help",
-  "commence": "start",
-  "commencing": "starting",
-  "demonstrate": "show",
-  "comprehensive": "full",
-  "numerous": "many",
-  "significant": "big",
-  "insufficient": "not enough",
-  "optimal": "best",
-  "approximately": "about",
-  "assistance": "help",
-  "prioritise": "focus on",
-  "initially": "at first",
-  "ultimately": "in the end",
-  "methodology": "method",
-  "objective": "goal",
-  "discontinue": "stop",
-  "subsequently": "later",
-  "consequently": "so",
-  "nevertheless": "but",
-  "furthermore": "also",
-  "moreover": "also",
-  "regarding": "about",
-  "ascertain": "find out", // New Aggressive Verb
-  "ameliorate": "improve", // New Aggressive Verb
-  "delineate": "explain", // New Aggressive Verb
-  "expeditiously": "fast" // New Aggressive Adverb
+  "utilise": "use", "utilising": "using", "utilized": "used", "leverage": "use", 
+  "implement": "use", "facilitate": "help", "commence": "start", 
+  "commencing": "starting", "demonstrate": "show", "comprehensive": "full", 
+  "numerous": "many", "significant": "big", "insufficient": "not enough", 
+  "optimal": "best", "approximately": "about", "assistance": "help", 
+  "prioritise": "focus on", "initially": "at first", "ultimately": "in the end", 
+  "methodology": "method", "objective": "goal", "discontinue": "stop", 
+  "subsequently": "later", "consequently": "so", "nevertheless": "but", 
+  "furthermore": "also", "moreover": "also", "regarding": "about",
+  "ascertain": "find out", "ameliorate": "improve", "delineate": "explain", 
+  "expeditiously": "fast", "individuals": "people", "organisations": "groups"
 };
 
-// *** NEW AGGRESSIVE MAP: Targets verbose structures (Strength 3 only) ***
+// 3. Filler and Passive Structure Removal (Aggressive)
 const fillerMap = {
-  "the fact that": "",
-  "the reason why": "why",
-  "is indicative of": "shows",
-  "is characterized by": "has",
-  "in connection with": "with",
-  "with the exception of": "except",
-  "of the nature of": "like",
-  "at the time when": "when",
-  "despite the fact that": "although",
-  "it is suggested that": "", // Removes passive introductory fluff
-  "in a satisfactory manner": "well"
+  "the fact that": "", "the reason why": "why", "is indicative of": "shows",
+  "is characterized by": "has", "in connection with": "with",
+  "with the exception of": "except", "of the nature of": "like",
+  "at the time when": "when", "despite the fact that": "although",
+  "it is suggested that": "", "in a satisfactory manner": "well"
 };
 
 
 /* ===========================
-   CORE LOGIC
+   CORE LOGIC (Simple and Robust)
 =========================== */
 
 function runSimplify() {
   const input = document.getElementById("inputText").value;
   const strength = Number(document.getElementById("strength").value);
 
-  // Don't run if empty
   if(!input.trim()) return;
 
   const simplified = simplifyText(input, strength);
 
   document.getElementById("outputText").value = simplified;
-
-  // Update Stats
-  updateStats("beforeStats", "Original", input);
-  updateStats("afterStats", "Simplified", simplified);
-}
-
-function updateStats(elementId, label, text) {
-  const grade = calculateGrade(text);
-  const words = wordCount(text);
-  document.getElementById(elementId).innerHTML = 
-    `<strong>${label}</strong><br>Words: ${words}<br>Reading Grade: ${grade}`;
 }
 
 function simplifyText(text, strength) {
   let output = text;
 
-  // 1. Replace complex phrases (Always do this)
+  // STEP 1: Always apply all substitutions (Phrases, Words, and Filler) for maximum simplification
   output = applyReplacements(output, phraseMap);
+  output = applyReplacements(output, wordMap);
+  output = applyReplacements(output, fillerMap);
 
-  // 2. Replace complex words (If strength is Medium or High)
+  // STEP 2: Control Sentence Splitting based on Strength Slider
   if (strength >= 2) {
-    output = applyReplacements(output, wordMap);
-  }
-  
-  // *** 3. NEW AGGRESSIVE STEP: Remove filler/passive structure (Strength 3 only) ***
-  if (strength === 3) {
-      output = applyReplacements(output, fillerMap);
+    output = splitLongSentences(output, strength);
   }
 
-  // 4. Sentence Splitting (Only on High strength)
-  // This breaks long sentences at logical conjunctions
-  if (strength === 3) {
-    output = splitLongSentences(output);
-  }
-
-  // 5. Cleanup
-  output = cleanPunctuation(output);
+  // STEP 3: Final Cleanup (Punctuation and Capitalization)
+  output = cleanAndCapitalize(output);
   
   return output;
 }
@@ -263,25 +190,24 @@ function simplifyText(text, strength) {
 function applyReplacements(text, map) {
   let result = text;
   
-  // Sort keys by length (longest first) so we don't replace substrings incorrectly
+  // Ensure we replace longer keys before shorter ones (e.g., "in order to" before "in order")
   const keys = Object.keys(map).sort((a, b) => b.length - a.length);
 
   keys.forEach(key => {
-    // Regex matches whole word boundaries (\b) only if the key is a phrase/word.
-    // If the key is a structure (like "the fact that"), we skip \b to allow internal matches.
+    // \b is a word boundary. We only use it for single words, not internal phrases.
     const useBoundary = key.split(" ").length === 1;
     const boundary = useBoundary ? "\\b" : "";
     
-    // Create Regex
+    // Create Case-Insensitive, Global Regex
     const regex = new RegExp(boundary + key + boundary, "gi");
     
     result = result.replace(regex, (match) => {
       const replacement = map[key];
-      // Only try to match case if there's an actual replacement word/phrase
+      // Only try to match case if there's an actual replacement string
       if (replacement && replacement.length > 0) {
         return matchCase(match, replacement);
       }
-      return replacement; // Returns "" for phrases like "it is suggested that"
+      return replacement; // Returns "" for empty replacements like "it is suggested that"
     });
   });
   
@@ -290,40 +216,46 @@ function applyReplacements(text, map) {
 
 // Matches the casing of the original word to the replacement
 function matchCase(original, replacement) {
-  // Check if original starts with capital, and replacement is a single word
-  if (replacement.split(" ").length === 1 && original[0] === original[0].toUpperCase()) {
-    return replacement.charAt(0).toUpperCase() + replacement.slice(1);
-  }
   // If original is all caps (e.g. ACRONYM), make replacement all caps
   if (original === original.toUpperCase() && original !== original.toLowerCase()) {
     return replacement.toUpperCase();
   }
-  
+  // If original starts with capital, capitalize replacement
+  if (original[0] === original[0].toUpperCase()) {
+    return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+  }
   // Otherwise lowercase
   return replacement.toLowerCase();
 }
 
-function splitLongSentences(text) {
+function splitLongSentences(text, strength) {
   let result = text;
 
-  // Split on semicolons and capital letter after:
+  // Split on semicolons for Medium/Heavy strength
   result = result.replace(/; ([A-Z])/g, ". $1"); 
 
-  // Split on "however" or "therefore" in the middle of sentences
+  // Split on "however" or "therefore"
   result = result.replace(/, however/gi, ". However");
   result = result.replace(/, therefore/gi, ". Therefore");
-
-  // Split ", and" or ", but"
-  result = result.replace(/, and /gi, ". "); 
-  result = result.replace(/, but /gi, ". But ");
+  
+  // Aggressive Splitting (Strength 3 only): break up ", and" and ", but"
+  if (strength === 3) {
+      result = result.replace(/, and /gi, ". "); 
+      result = result.replace(/, but /gi, ". But ");
+  }
   
   return result;
 }
 
-function cleanPunctuation(text) {
-  // Capitalize after periods, question marks, and exclamation marks
+
+function cleanAndCapitalize(text) {
+  // 1. Capitalize after periods, question marks, and exclamation marks
   text = text.replace(/([.?!]\s*)[a-z]/g, (match, p1) => p1 + match.slice(-1).toUpperCase());
   
+  // 2. Capitalize the very first letter of the whole output
+  text = text.trim().charAt(0).toUpperCase() + text.trim().slice(1);
+  
+  // 3. Final punctuation cleanup
   return text
     .replace(/\s+/g, " ")      // Collapse multiple spaces
     .replace(/\s+\./g, ".")    // Remove space before dot
@@ -331,44 +263,6 @@ function cleanPunctuation(text) {
     .replace(/\s+,/g, ",")     // Remove space before comma
     .trim();
 }
-
-/* ===========================
-   METRICS
-=========================== */
-
-function wordCount(text) {
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-function calculateGrade(text) {
-  const words = wordCount(text);
-  const sentences = Math.max(text.split(/[.!?]/).length - 1, 1);
-  const syllables = countSyllables(text);
-  
-  // Handle edge case of zero words
-  if (words === 0) return 0;
-  
-  // Flesch-Kincaid Grade Level Formula
-  const score = 0.39 * (words / sentences) + 11.8 * (syllables / words) - 15.59;
-  return Math.max(0, Math.round(score * 10) / 10); // Round to 1 decimal
-}
-
-function countSyllables(text) {
-  return text
-    .toLowerCase()
-    .split(/\s+/)
-    .reduce((sum, word) => {
-      word = word.replace(/[^a-z]/g, "");
-      if (word.length <= 3) return sum + 1; // Quick estimate for very short words
-      
-      // Basic vowel group counting, handles most English words well
-      const syllables = word.match(/[aeiouy]{1,2}/g);
-      
-      // Safety check: always assign at least 1 syllable if the word has vowels
-      return sum + Math.max(1, (syllables ? syllables.length : 0));
-    }, 0);
-}
 </script>
-
 </body>
 </html>
