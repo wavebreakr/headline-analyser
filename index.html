@@ -3,37 +3,35 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Language Grader & Simplifier (V3.0 Revert to Original Design)</title>
+<title>Language Grader & Simplifier (V5.0 NLP-Centric)</title>
 
 <style>
-  /* CORE STYLING - Reverting to Original V2.0 Blue/White Palette */
+  /* CORE STYLING - V3.0 Blue/White Palette */
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0; padding: 0; color: #333;
-    /* Reverted: Original light blue gradient */
     background: linear-gradient(135deg, #e0f7fa 0%, #b3e5fc 100%); 
     min-height: 100vh; display: flex; align-items: center; justify-content: center;
   }
 
   .container {
     max-width: 700px; 
-    width: calc(100% - 40px); /* Retains V2.9 Polish: consistent side margins */
+    width: calc(100% - 40px); 
     margin: 32px auto; 
     padding: 30px; 
     border-radius: 20px;
-    
-    background: rgba(255, 255, 255, 0.85); /* Original Opacity/Haze */
+    background: rgba(255, 255, 255, 0.85); 
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); 
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); 
     border: 1px solid rgba(255, 255, 255, 0.6);
   }
 
-  h2 { margin-top: 0; color: #1565c0; /* Reverted H2 to primary blue */ text-align: center; font-weight: 800; letter-spacing: -0.5px; }
+  h2 { margin-top: 0; color: #1565c0; text-align: center; font-weight: 800; letter-spacing: -0.5px; }
 
   .intro-text {
-    background: #e3f2fd; /* Light blue background */ padding: 15px; border-radius: 12px; margin-bottom: 25px;
-    border-left: 4px solid #1565c0; /* Primary blue accent */
-    color: #0d47a1; /* Dark blue text */ line-height: 1.5; font-size: 15px;
+    background: #e3f2fd; padding: 15px; border-radius: 12px; margin-bottom: 25px;
+    border-left: 4px solid #1565c0; 
+    color: #0d47a1; line-height: 1.5; font-size: 15px;
   }
 
   textarea {
@@ -43,12 +41,12 @@
     transition: border-color 0.2s; margin-bottom: 10px;
   }
   
-  textarea:focus { outline: none; border-color: #2196f3; box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2); } /* Reverted focus color to blue */
+  textarea:focus { outline: none; border-color: #2196f3; box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2); } 
   textarea#outputText { background: #f5f5f5; color: #2c3e50; font-weight: 500; }
 
   button {
     width: 100%; padding: 16px; font-size: 18px; font-weight: 700; border: none; border-radius: 10px;
-    background: #1565c0; /* Reverted main button to primary blue */ color: white; cursor: pointer; margin-top: 5px; margin-bottom: 20px;
+    background: #1565c0; color: white; cursor: pointer; margin-top: 5px; margin-bottom: 20px;
     box-shadow: 0 4px 6px rgba(21, 101, 192, 0.2); transition: background 0.2s, transform 0.1s;
   }
 
@@ -56,12 +54,12 @@
   button:active { transform: scale(0.99); } 
 
   #copyButton {
-    background: #009688; margin-top: 0; margin-bottom: 15px; /* Copy button remains green/teal for visual contrast */
+    background: #009688; margin-top: 0; margin-bottom: 15px; 
     box-shadow: 0 4px 6px rgba(0, 150, 136, 0.2);
   }
   #copyButton:hover { background: #00796b; }
 
-  /* --- Metric Pill Styling (Preserving V2.6 Consistency) --- */
+  /* --- Metric Pill Styling --- */
   .metric-bar {
       display: flex;
       justify-content: space-between;
@@ -72,7 +70,6 @@
       background: rgba(255, 255, 255, 0.7); 
       backdrop-filter: blur(10px); 
       -webkit-backdrop-filter: blur(10px);
-      
       border-radius: 12px;
       padding: 10px 15px;
       flex: 1;
@@ -99,17 +96,17 @@
       font-size: 26px;
       font-weight: 800;
       line-height: 1.1;
-      color: #0d47a1; /* Reverted metric value color to dark blue */
+      color: #0d47a1; 
   }
 
-  /* V2.5: Dynamic Grade Color Classes - PRESERVED for functional clarity */
+  /* Dynamic Grade Color Classes */
   .grade-poor { color: #d32f2f; } 
   .grade-okay { color: #f9a825; } 
   .grade-good { color: #1e88e5; } 
   .grade-excellent { color: #388e3c; } 
 
 
-  /* PREMIUM PROMPT STYLES - Reverted button color, prompt box retained */
+  /* PREMIUM PROMPT STYLES */
   #premium-prompt {
     background: linear-gradient(135deg, #fffbe5 0%, #fff8e1 100%); 
     border: 1px solid #ffe082;
@@ -158,6 +155,7 @@
   #premium-button:active { transform: scale(0.98); }
 
 </style>
+<script src="https://unpkg.com/compromise"></script>
 </head>
 
 <body>
@@ -211,34 +209,21 @@
 
 <script>
 // ==========================================
-// ALL JAVASCRIPT LOGIC REMAINS UNCHANGED
+// V5.0: NLP-CENTRIC SIMPLIFICATION
 // ==========================================
 
-const criticalPhraseMap = {
-    "We are not in a position to": "We cannot", "is not in a position to": "cannot", "are not in a position to": "cannot",
-    "shall not be deemed acceptable": "is not allowed", "The necessity of the": "We need to", "is predicated upon": "depends on",
-    "is currently contingent upon": "depends on", "the aforementioned": "this", "the receipt of the": "getting the",
-    "it is important to note that ": "", "it should be noted that ": "",
+// ONLY the essential wordMap for key legal jargon is kept.
+const essentialWordMap = {
+    "shall": "must", 
+    "prior to": "before", 
+    "subsequent to": "after",
+    "the aforementioned": "this",
+    "due to the fact that": "because",
+    "is hereby deemed a material breach of this agreement": "is a major break of this contract",
+    "notwithstanding the provisions": "even with the rules"
 };
 
-const longPhraseMap = {
-    "is hereby deemed a material breach of this agreement": "is a major break of this contract", "notwithstanding the provisions": "even with the rules", 
-    "The Lessee shall": "The renter must", "The Lessor shall": "The owner must", "is authorized to": "can",
-    "in the event of": "if", "prior to": "before", "subsequent to": "after",
-    "due to the fact that": "because", "make use of": "use", "conduct an evaluation": "check"
-};
-
-const wordMap = {
-    "irrefutable": "clear", "necessity": "need", "revision": "change", "protocols": "rules", "guidelines": "rules", "modification": "change", 
-    "shall": "must", "furnish": "give", "verification": "check", "commence": "start", "accrued": "earned", "transmit": "send", "said": "the", "rigorous": "strict", 
-    "expeditiously": "fast", "assistance": "help", "ultimately": "lastly", "methodology": "method", "objective": "goal", "consequently": "so", 
-    "ameliorate": "fix", "evaluation": "check", "establishment": "start"
-};
-
-const conjunctionMap = {
-    "furthermore": "Also", "moreover": "Also", "nevertheless": "But", "however": "But", "therefore": "So", "hence": "So", "accordingly": "So"
-};
-
+// CORE FUNCTION: RUN SIMPLIFICATION (Now focused on NLP)
 function runSimplify() {
     const inputTextarea = document.getElementById('inputText');
     const inputText = inputTextarea.value;
@@ -252,20 +237,44 @@ function runSimplify() {
 
     updateStats(inputText, ""); 
     
-    const simplifiedLines = inputText.split('\n').map(originalLine => {
-        if (originalLine.trim().length === 0) {
-            return originalLine;
-        }
+    let processedText = inputText;
+    
+    // --- 1. Essential Jargon Replacement (Simple Regex Pass) ---
+    // We keep this simple pass to quickly catch major legal terms before the NLP pass.
+    processedText = applyReplacements(processedText, essentialWordMap);
 
-        let outputLine = originalLine;
-        outputLine = applyReplacements(outputLine, criticalPhraseMap);
-        outputLine = applyReplacements(outputLine, longPhraseMap);
-        outputLine = applyReplacements(outputLine, wordMap);
-        outputLine = handleConjunctions(outputLine);
-        outputLine = fixRedundancy(outputLine);
-        outputLine = cleanAndCapitalize(outputLine);
+    // --- 2. COMPROMISE.JS PASS (The heavy lifting) ---
+    try {
+        let doc = nlp(processedText); // Initialize the library
+
+        // Simplification Command 1: Expand contractions (e.g., isn't -> is not)
+        doc = doc.contractions().expand(); 
         
-        return outputLine;
+        // Simplification Command 2: Change passive verbs to active where possible
+        doc = doc.verbs().toActive();
+        
+        // Simplification Command 3: Add periods to force sentence breaking (improves Flesch-Kincaid score)
+        doc = doc.sentences().toSentences(); 
+        
+        // Simplification Command 4: Remove all adverbs that weaken a phrase (e.g. "highly essential")
+        // Note: We use a custom Compromise filter for a more advanced version of fixRedundancy
+        doc.match('(most|very|highly) [adjective]').delete();
+
+        processedText = doc.text(); // Get the text back out
+        
+    } catch (e) {
+        // If the library fails, fall back to the raw text to prevent crashing.
+        console.error("Compromise.js error:", e);
+    }
+    // --- END COMPROMISE.JS PASS ---
+
+
+    // 3. Final cleaning and capitalization pass
+    const simplifiedLines = processedText.split('\n').map(line => {
+        if (line.trim().length === 0) {
+            return line;
+        }
+        return cleanAndCapitalize(line); 
     });
 
     const outputText = simplifiedLines.join('\n');
@@ -273,28 +282,11 @@ function runSimplify() {
     updateStats(inputText, outputText); 
 }
 
-function handleConjunctions(line) {
-    let result = line;
-    for (const complex in conjunctionMap) {
-        const simple = conjunctionMap[complex];
-        const regex = new RegExp("[,;\\.]\\s*" + complex + "\\s*([\\.|,|\\s])", "gi");
-        result = result.replace(regex, ". " + simple + ". ");
-    }
-    result = result.replace(/; \s*([A-Z])/gi, ". $1"); 
-    return result;
-}
-function fixRedundancy(line) {
-    const weakAdverbs = ["most", "very", "highly", "thorough", "robust"];
-    const absoluteAdjectives = ["best", "full", "complete", "unique", "strict", "major"];
-    let result = line;
-    weakAdverbs.forEach(adverb => {
-        absoluteAdjectives.forEach(adjective => {
-            const regex = new RegExp("\\b" + adverb + "\\s+" + adjective + "\\b", "gi");
-            result = result.replace(regex, adjective);
-        });
-    });
-    return result;
-}
+// ==========================================
+// HELPER FUNCTIONS (RETAINED)
+// ==========================================
+
+// ONLY applyReplacements and metrics helpers are kept.
 function cleanAndCapitalize(line) {
     let cleaned = line.trim();
     cleaned = cleaned.replace(/([.?!]\s*)[a-z]/gi, (match, p1) => p1 + match.charAt(match.length - 1).toUpperCase());
@@ -426,7 +418,7 @@ function copyToClipboard() {
 document.addEventListener('DOMContentLoaded', () => {
     updateStats('', '');
     document.getElementById('premium-button').onclick = function() {
-        alert("The Premium Tier is launching soon! Get ready for NLP-powered simplification.");
+        alert("The Premium Tier is launching soon! Get ready for a truly powerful NLP engine.");
     };
 });
 </script>
