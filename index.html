@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Language Grader & Simplifier (V2.2 Aesthetic Polish)</title>
+<title>Language Grader & Simplifier (V2.3 Comparison Focus)</title>
 
 <style>
-  /* CORE STYLING - Adjusted for Softer Aesthetic */
+  /* CORE STYLING - Retained from V2.2 */
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0; padding: 0; color: #333;
@@ -16,7 +16,7 @@
 
   .container {
     max-width: 700px; width: 90%; margin: 32px auto; padding: 30px; border-radius: 20px;
-    background: rgba(255, 255, 255, 0.95); /* Slightly transparent white */
+    background: rgba(255, 255, 255, 0.95); 
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); 
     border: 1px solid #e0e0e0;
   }
@@ -45,9 +45,8 @@
     box-shadow: 0 2px 10px rgba(0, 122, 255, 0.3); transition: background 0.2s, transform 0.1s;
   }
 
-  /* V2.2: Subtle Haptic-like feedback on button press */
   button:hover { background: #006ddb; }
-  button:active { transform: scale(0.99); /* Subtle press effect */ } 
+  button:active { transform: scale(0.99); } 
 
   #copyButton {
     background: #34c759; 
@@ -63,8 +62,7 @@
   }
 
   .metric-pill {
-      /* V2.2: Background Blur for Liquid Glass Effect */
-      background: rgba(255, 255, 255, 0.7); /* Reduced opacity for blur */
+      background: rgba(255, 255, 255, 0.7); 
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       
@@ -117,21 +115,21 @@
   <div class="metric-bar">
     <div class="metric-pill">
       <div class="metric-label">Original Words</div>
-      <div class="metric-value metric-words" id="originalWordCount">0</div>
+      <div class="metric-value metric-words" id="originalWordCount">N/A</div>
     </div>
     <div class="metric-pill">
       <div class="metric-label">Original Grade Level</div>
       <div class="metric-value metric-grade" id="gradeLevel">N/A</div>
     </div>
   </div>
-  <textarea id="inputText" oninput="updateStats(this.value, document.getElementById('outputText').value)" placeholder="Paste complex text here (e.g. 'The Lessee shall endeavor to...')"></textarea>
+  <textarea id="inputText" placeholder="Paste complex text here (e.g. 'The Lessee shall endeavor to...')"></textarea>
 
   <button onclick="runSimplify()">Simplify & Grade Text</button>
 
   <div class="metric-bar">
     <div class="metric-pill">
       <div class="metric-label">Simplified Words</div>
-      <div class="metric-value metric-words" id="simplifiedWordCount">0</div>
+      <div class="metric-value metric-words" id="simplifiedWordCount">N/A</div>
     </div>
     <div class="metric-pill">
       <div class="metric-label">Simplified Grade Level</div>
@@ -148,12 +146,7 @@
 // 1. DICTIONARIES (V2.0) - Unchanged for stability
 // ==========================================
 // (Dictionary definitions remain here)
-const criticalPhraseMap = { /* ... */ };
-const longPhraseMap = { /* ... */ };
-const wordMap = { /* ... */ };
-const conjunctionMap = { /* ... */ };
 
-// Place all dictionary definitions from V2.0 Hardened here
 const criticalPhraseMap = {
     "We are not in a position to": "We cannot", "is not in a position to": "cannot", "are not in a position to": "cannot",
     "shall not be deemed acceptable": "is not allowed", "The necessity of the": "We need to", "is predicated upon": "depends on",
@@ -179,20 +172,25 @@ const conjunctionMap = {
     "furthermore": "Also", "moreover": "Also", "nevertheless": "But", "however": "But", "therefore": "So", "hence": "So", "accordingly": "So"
 };
 
-
 // ==========================================
-// 2. CORE FUNCTIONS (V2.2 - Logic Unchanged)
+// 2. CORE FUNCTIONS (V2.3 - Logic Unchanged)
 // ==========================================
 function runSimplify() {
-    const inputText = document.getElementById('inputText').value;
+    const inputTextarea = document.getElementById('inputText');
+    const inputText = inputTextarea.value;
     const outputTextarea = document.getElementById('outputText');
-    outputTextarea.value = "";
-    
+    outputTextarea.value = ""; // Clear output first
+
     if (!inputText.trim().length) {
-        updateStats(inputText, "");
+        // V2.3: Reset all metrics to initial state for clear comparison effect
+        updateStats("", "");
         return;
     }
 
+    // V2.3: Run the initial stats update here (BEFORE simplification)
+    // This is the "Before" part of the comparison
+    updateStats(inputText, ""); 
+    
     const simplifiedLines = inputText.split('\n').map(originalLine => {
         if (originalLine.trim().length === 0) {
             return originalLine;
@@ -211,9 +209,12 @@ function runSimplify() {
 
     const outputText = simplifiedLines.join('\n');
     outputTextarea.value = outputText;
-    // Call updateStats again to reflect simplified text and score
+
+    // V2.3: Run the final stats update here (AFTER simplification)
+    // This is the "After" part of the comparison
     updateStats(inputText, outputText); 
 }
+
 function handleConjunctions(line) {
     let result = line;
     for (const complex in conjunctionMap) {
@@ -288,6 +289,9 @@ function countSyllables(text) {
     return count;
 }
 function countSentences(text) {
+    // If the text is empty, return 0 sentences to prevent division by zero
+    if (!text || text.trim().length === 0) return 0;
+    // Count punctuation marks that end a sentence and ensure there is at least one sentence
     return (text.match(/([.?!])\s*[A-Z]/g) || []).length + 1;
 }
 function calculateFleschKincaid(words, sentences, syllables) {
@@ -299,28 +303,37 @@ function calculateFleschKincaid(words, sentences, syllables) {
 }
 
 // ==========================================
-// 4. UTILITIES (Updated for V2.2)
+// 4. UTILITIES (Updated for V2.3)
 // ==========================================
 
 function updateStats(originalText, simplifiedText) {
-    // Determine which text area to pull simplified text from if not explicitly passed
-    const simpText = simplifiedText || document.getElementById('outputText').value;
-
     const origWords = wordCount(originalText);
-    const simpWords = wordCount(simpText);
+    const simpWords = wordCount(simplifiedText);
 
+    // Calculate original metrics
     const origSentences = countSentences(originalText);
     const origSyllables = countSyllables(originalText);
     const origGrade = calculateFleschKincaid(origWords, origSentences, origSyllables);
     
-    const simpSentences = countSentences(simpText);
-    const simpSyllables = countSyllables(simpText);
+    // Calculate simplified metrics
+    const simpSentences = countSentences(simplifiedText);
+    const simpSyllables = countSyllables(simplifiedText);
     const simpGrade = calculateFleschKincaid(simpWords, simpSentences, simpSyllables);
 
-    document.getElementById('originalWordCount').innerText = origWords;
-    document.getElementById('simplifiedWordCount').innerText = simpWords;
-    document.getElementById('gradeLevel').innerText = origWords > 0 ? origGrade : 'N/A';
-    document.getElementById('simplifiedGradeLevel').innerText = simpWords > 0 ? simpGrade : 'N/A';
+    // V2.3: Reset Original Metrics if simplifiedText is empty (i.e., before the button is pressed)
+    if (!simplifiedText) {
+        document.getElementById('originalWordCount').innerText = origWords || 'N/A';
+        document.getElementById('gradeLevel').innerText = origWords > 0 ? origGrade : 'N/A';
+        // Ensure simplified output metrics are cleared before running the simplification
+        document.getElementById('simplifiedWordCount').innerText = 'N/A';
+        document.getElementById('simplifiedGradeLevel').innerText = 'N/A';
+    } else {
+        // Update both sets of metrics after simplification is complete
+        document.getElementById('originalWordCount').innerText = origWords;
+        document.getElementById('gradeLevel').innerText = origGrade;
+        document.getElementById('simplifiedWordCount').innerText = simpWords;
+        document.getElementById('simplifiedGradeLevel').innerText = simpGrade;
+    }
 }
 
 function wordCount(text) {
@@ -345,7 +358,7 @@ function copyToClipboard() {
     }, 1500);
 }
 
-// V2.2: Initial call to set metrics to 0/N/A on load
+// V2.3: Initial call to set metrics to N/A on load (only needed once)
 document.addEventListener('DOMContentLoaded', () => {
     updateStats('', '');
 });
