@@ -23,6 +23,24 @@
 
   h2 { margin-top: 0; color: #1a237e; text-align: center; font-weight: 700; letter-spacing: -0.5px; }
 
+  /* INTRO TEXT STYLES */
+  .intro-text {
+    background: rgba(255, 255, 255, 0.4);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border-left: 5px solid #42a5f5; /* Light blue accent bar */
+  }
+
+  .intro-text p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #1a237e;
+    font-weight: 500;
+  }
+  /* END INTRO TEXT STYLES */
+
   textarea {
     width: 100%; min-height: 180px; padding: 15px; font-size: 16px; line-height: 1.6;
     border-radius: 12px; box-sizing: border-box; font-family: inherit; resize: vertical;
@@ -83,6 +101,11 @@
 <div class="container">
   <h2>Simplifier</h2>
 
+  <div class="intro-text">
+      <p>
+          <strong>Instantly achieve clarity and precision.</strong> It takes complex text—the jargon, long phrases, and heavy words—and converts it into simple, direct, and easy-to-read language.
+      </p>
+  </div>
   <textarea id="inputText" placeholder="Paste complex text here..."></textarea>
   <div class="stat-row">
     <div class="word-count" id="originalWordCount">Original Words: 0</div>
@@ -102,221 +125,321 @@
 </div>
 
 <script>
-// ==========================================
-// THE ULTIMATE DICTIONARY BANK (MAXIMUM AGGRESSION)
-// ==========================================
+// --- DICTIONARIES (EXPANDED) ---
 
 const phraseMap = {
-  // Formal conditions and authorizations
-  "is authorized to": "can", "is permitted to": "can", "in the event of": "if", "not later than": "by",
-  
-  // Common multi-word formal phrases
-  "commencement of": "starting", "utilisation": "use", "endeavor": "try", 
-  "in order to": "to", "prior to": "before", "subsequent to": "after", 
-  "at this point in time": "now", "at that point in time": "then",
-  "due to the fact that": "because", "owing to the fact that": "because", 
-  "as a result of": "because", "with regard to": "about", 
-  "in relation to": "about", "in respect of": "about",
-  "is capable of": "can", "has the ability to": "can",
-  "has the capacity to": "can", "there is a need to": "we must", 
-  
-  // Fluff and passive structure removal (with trailing space for clean removal)
-  "it is important to note that ": "", "it should be noted that ": "", 
-  "the purpose of this is to ": "", "it has been determined that ": "",
-  "make use of": "use", "conduct an evaluation": "check", 
-  "take into consideration": "consider", "provides guidance for": "guides", 
-  "give an indication of": "show", "in the event that": "if",
-  
-  // Formal conditions and authorizations
-  "notwithstanding the fact that": "although", "in the absence of": "without",
-  "not in a position to": "cannot", "on the basis of": "by",
-  "at a later date": "later", "perform a review of": "review",
-  "is in receipt of": "gets", "in close proximity to": "near",
-  "a number of": "many", "do an assessment of": "assess",
-  "it is essential that": "we must", 
-  
-  // FIX: Simplify the 'consult with' error
-  "shall consult with": "must ask",
-  "will consult with": "will ask",
+    // New legal/business terms
+    "is hereby deemed a material breach of this agreement": "is a major break of this contract",
+    "notwithstanding the provisions": "even with the rules",
+    "is currently contingent upon": "depends on",
+    "The Lessee shall": "The renter must",
+    "The Lessor shall": "The owner must",
+    
+    // Existing/Enhanced
+    "is authorized to": "can",
+    "is permitted to": "can",
+    "in the event of": "if",
+    "not later than": "by",
+    "commencement of": "starting",
+    "utilisation": "use",
+    "endeavor": "try",
+    "in order to": "to",
+    "prior to": "before",
+    "subsequent to": "after",
+    "at this point in time": "now",
+    "at that point in time": "then",
+    "due to the fact that": "because",
+    "owing to the fact that": "because",
+    "as a result of": "because",
+    "with regard to": "about",
+    "in relation to": "about",
+    "in respect of": "about",
+    "is capable of": "can",
+    "has the ability to": "can",
+    "has the capacity to": "can",
+    "there is a need to": "we must",
+    "it is important to note that ": "",
+    "it should be noted that ": "",
+    "the purpose of this is to ": "",
+    "it has been determined that ": "",
+    "make use of": "use",
+    "conduct an evaluation": "check",
+    "take into consideration": "consider",
+    "provides guidance for": "guides",
+    "give an indication of": "show",
+    "in the event that": "if",
+    "notwithstanding the fact that": "although",
+    "in the absence of": "without",
+    "not in a position to": "cannot",
+    "on the basis of": "by",
+    "at a later date": "later",
+    "perform a review of": "review",
+    "is in receipt of": "gets",
+    "in close proximity to": "near",
+    "a number of": "many",
+    "do an assessment of": "assess",
+    "it is essential that": "we must",
+    "shall consult with": "must ask",
+    "will consult with": "will ask"
 };
 
 const wordMap = {
-  // Formal verbs and abstract nouns
-  "exhibit": "show", "exhibiting": "showing", "acquire": "get", "acquired": "got",
-  "demonstrate": "show", "demonstrates": "shows", "expedite": "speed up", 
-  "expeditiously": "fast", "possesses": "has", "remuneration": "pay",
-  "dialogue": "talk", "monetary": "money", "commence": "start", 
-  "commencing": "starting", "utilise": "use", "utilising": "using", 
-  "utilized": "used", "leverage": "use", "implement": "use", 
-  "facilitate": "help", "comprehensive": "full", "numerous": "many", 
-  "significant": "big", "insufficient": "not enough", "optimal": "best", 
-  "approximately": "about", "assistance": "help", "prioritise": "focus on", 
-  "initially": "first", "ultimately": "lastly", "methodology": "method", 
-  "objective": "goal", "discontinue": "stop", "subsequently": "later", 
-  "consequently": "so", "regarding": "about", "ascertain": "check", 
-  "ameliorate": "fix", "delineate": "show", "individuals": "people", 
-  "organisations": "groups", "evaluation": "check", 
-  "verification": "check", "establishment": "start", "requirements": "rules",
-  "commitment": "pledge", "determination": "decision", "necessity": "need",
-  "modification": "change", "clarification": "explain", "contingency": "chance",
-  "submit": "send", "advise": "tell", "furnish": "give", "retain": "keep",
-  "transmit": "send", "procure": "buy", "consult": "ask"
+    // New and enhanced words
+    "necessitate": "require", 
+    "implementation": "use",
+    "validation": "testing",
+    "stipulated": "written",
+    "accrued": "earned",
+    "transmit": "send",
+    "said": "the", // context-specific simplification
+    "rigorous": "strict", // keeps the qualifier but simplifies the word
+    
+    // Existing
+    "exhibit": "show",
+    "exhibiting": "showing",
+    "acquire": "get",
+    "acquired": "got",
+    "demonstrate": "show",
+    "demonstrates": "shows",
+    "expedite": "speed up",
+    "expeditiously": "fast",
+    "possesses": "has",
+    "remuneration": "pay",
+    "dialogue": "talk",
+    "monetary": "money",
+    "commence": "start",
+    "commencing": "starting",
+    "utilise": "use",
+    "utilising": "using",
+    "utilized": "used",
+    "leverage": "use",
+    "implement": "use",
+    "facilitate": "help",
+    "comprehensive": "full",
+    "numerous": "many",
+    "significant": "big",
+    "insufficient": "not enough",
+    "optimal": "best",
+    "approximately": "about",
+    "assistance": "help",
+    "prioritise": "focus on",
+    "initially": "first",
+    "ultimately": "lastly",
+    "methodology": "method",
+    "objective": "goal",
+    "discontinue": "stop",
+    "subsequently": "later",
+    "consequently": "so",
+    "regarding": "about",
+    "ascertain": "check",
+    "ameliorate": "fix",
+    "delineate": "show",
+    "individuals": "people",
+    "organisations": "groups",
+    "evaluation": "check",
+    "verification": "check",
+    "establishment": "start",
+    "requirements": "rules",
+    "commitment": "pledge",
+    "determination": "decision",
+    "necessity": "need",
+    "modification": "change",
+    "clarification": "explain",
+    "contingency": "chance",
+    "submit": "send",
+    "advise": "tell",
+    "furnish": "give",
+    "retain": "keep",
+    "procure": "buy",
+    "consult": "ask"
 };
 
+// Conjunctions are now replaced with a new sentence (Period + Capitalized replacement)
 const conjunctionMap = {
-  "furthermore": "Also", "moreover": "Also", "nevertheless": "But", 
-  "however": "But", "therefore": "So", "hence": "So", "accordingly": "So"
+    "furthermore": "Also",
+    "moreover": "Also",
+    "nevertheless": "But",
+    "however": "But",
+    "therefore": "So",
+    "hence": "So",
+    "accordingly": "So"
 };
 
-/* ===========================
-   CORE LOGIC & EXECUTION
-=========================== */
+// --- CORE FUNCTIONS ---
 
 function runSimplify() {
-  const input = document.getElementById("inputText").value;
-  document.getElementById("outputText").value = "";
-
-  if(!input.trim()) {
-    updateStats("", "");
-    return;
-  }
-
-  // Iterate line-by-line to preserve paragraphs and lists
-  const simplifiedLines = input.split('\n').map(line => {
-    if (line.trim().length === 0) return line;
+    const inputText = document.getElementById('inputText').value;
+    document.getElementById('outputText').value = "";
     
-    let out = simplifyLine(line);
-    out = fixRedundancy(out);
-    return cleanAndCapitalize(out, line); 
-  });
+    if (!inputText.trim().length) {
+        updateStats("", "");
+        return;
+    }
 
-  const simplified = simplifiedLines.join('\n');
-  document.getElementById("outputText").value = simplified;
-  
-  updateStats(input, simplified);
+    const simplifiedLines = inputText.split('\n').map(originalLine => {
+        if (originalLine.trim().length === 0) {
+            return originalLine;
+        }
+
+        let outputLine = originalLine;
+        
+        // Step 1: Apply all replacements (Phrases, Words, and Conjunctions)
+        outputLine = simplifyLine(outputLine);
+        
+        // Step 2: Fix redundancy (must run after replacements to catch new simple words)
+        outputLine = fixRedundancy(outputLine);
+
+        // Step 3: Clean up capitalization and spacing
+        outputLine = cleanAndCapitalize(outputLine, originalLine);
+        
+        return outputLine;
+    });
+
+    const outputText = simplifiedLines.join('\n');
+    document.getElementById('outputText').value = outputText;
+    updateStats(inputText, outputText);
 }
 
-function simplifyLine(text) {
-  let output = text;
-  output = applyReplacements(output, phraseMap);
-  output = applyReplacements(output, wordMap);
-  
-  for (const formal in conjunctionMap) {
-    const regex = new RegExp(",\\s*" + formal + "\\s*", "gi");
-    output = output.replace(regex, ". " + conjunctionMap[formal] + " ");
-  }
-  
-  output = output.replace(/; ([A-Z])/g, ". $1"); 
-  output = output.replace(/, and /gi, ". "); 
-  output = output.replace(/, but /gi, ". But ");
-  
-  return output;
+function simplifyLine(line) {
+    let result = line;
+    
+    // 1. Apply Phrase and Word Map replacements
+    result = applyReplacements(result, phraseMap);
+    result = applyReplacements(result, wordMap);
+
+    // 2. Fix conjunction usage (e.g., ", furthermore " -> ". Also ")
+    for (const complex in conjunctionMap) {
+        const simple = conjunctionMap[complex];
+        // This regex now finds ", complex" followed by optional space, and replaces it with ". Simple. "
+        const regex = new RegExp("[,;]\\s*" + complex + "\\s*([\\.|,|\\s])", "gi");
+        // Ensure the replacement starts a new sentence and the word is capitalized
+        result = result.replace(regex, ". " + simple + ". ");
+    }
+    
+    // 3. Simple punctuation fixes
+    result = result.replace(/; \s*([A-Z])/gi, ". $1"); 
+    result = result.replace(/, and /gi, " and ");
+    result = result.replace(/, but /gi, " but ");
+    result = result.replace(/, But /gi, ". But "); 
+
+    return result;
 }
 
-function fixRedundancy(text) {
-    const redundantSuperlatives = ["best", "full", "perfect", "complete", "unique"];
-    const redundancyWords = ["most", "very", "highly"]; 
-    let result = text;
+function fixRedundancy(line) {
+    // Expanded list of weak/filler intensifiers
+    const weakAdverbs = ["most", "very", "highly", "result", "thorough", "robust", "full"];
+    const absoluteAdjectives = ["best", "full", "perfect", "complete", "unique", "big", "strict", "major"];
+    let result = line;
 
-    redundancyWords.forEach(redundancy => {
-        redundantSuperlatives.forEach(superlative => {
-            const regex = new RegExp(`\\b${redundancy}\\s+${superlative}\\b`, 'gi');
-            
+    weakAdverbs.forEach(adverb => {
+        absoluteAdjectives.forEach(adjective => {
+            // Regex to find: (weakAdverb) (optional whitespace) (absoluteAdjective)
+            const regex = new RegExp("\\b" + adverb + "\\s+" + adjective + "\\b", "gi");
             result = result.replace(regex, (match) => {
-                const isCapitalized = match.toLowerCase().indexOf(superlative) === match.indexOf(superlative);
-                return isCapitalized ? superlative.charAt(0).toUpperCase() + superlative.slice(1) : superlative;
+                const lowerMatch = match.toLowerCase();
+                // If the match contains both words, return only the adjective (with proper capitalization)
+                if (lowerMatch.includes(adverb) && lowerMatch.includes(adjective)) {
+                    // Return the adjective, attempting to preserve initial capitalization
+                    return match.includes(adjective.toUpperCase()) ? adjective.toUpperCase() : adjective;
+                }
+                return adjective;
             });
+        });
+    });
+
+    return result;
+}
+
+// --- UTILITY FUNCTIONS (Unchanged from previous revision) ---
+
+function copyToClipboard() {
+    const outputTextarea = document.getElementById('outputText');
+    if (outputTextarea.value.trim().length === 0) {
+        alert("Nothing to copy!");
+        return;
+    }
+    outputTextarea.select();
+    outputTextarea.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    
+    const copyButton = document.getElementById('copyButton');
+    const originalText = copyButton.innerText;
+    copyButton.innerText = "Copied! 🎉";
+    
+    setTimeout(() => {
+        copyButton.innerText = originalText;
+    }, 1500);
+}
+
+function updateStats(originalText, simplifiedText) {
+    const originalCount = wordCount(originalText);
+    const simplifiedCount = wordCount(simplifiedText);
+    
+    document.getElementById('originalWordCount').innerText = "Original Words: " + originalCount;
+    document.getElementById('simplifiedWordCount').innerText = "Simplified Words: " + simplifiedCount;
+}
+
+function wordCount(text) {
+    return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function applyReplacements(text, map) {
+    let result = text;
+    const sortedKeys = Object.keys(map).sort((a, b) => b.length - a.length);
+
+    sortedKeys.forEach(complex => {
+        const isSingleWord = complex.split(' ').length === 1;
+        const boundary = isSingleWord ? "\\b" : "";
+        
+        const regex = new RegExp(boundary + complex + boundary, "gi");
+
+        result = result.replace(regex, (match) => {
+            const simple = map[complex];
+            if (!simple) {
+                return "";
+            }
+
+            if (match === match.toUpperCase()) {
+                return simple.toUpperCase();
+            }
+            if (match[0] === match[0].toUpperCase()) {
+                return simple.charAt(0).toUpperCase() + simple.slice(1).toLowerCase();
+            }
+            return simple.toLowerCase();
         });
     });
     return result;
 }
 
-/* ===========================
-   UTILITY FUNCTIONS
-=========================== */
-
-function copyToClipboard() {
-    const outputTextarea = document.getElementById("outputText");
-    if (outputTextarea.value.trim() === "") {
-        alert("Nothing to copy!");
-        return;
+function cleanAndCapitalize(line, originalLine) {
+    if (!line || line.trim().length === 0) {
+        return line;
     }
     
-    outputTextarea.select();
-    outputTextarea.setSelectionRange(0, 99999);
-    document.execCommand("copy");
+    const listMarkerMatch = originalLine.match(/\s*([I|V|X|A-Za-z0-9]+\.|\*|-|•)\s*/);
+    const listMarker = listMarkerMatch ? listMarkerMatch[0] : "";
     
-    const originalText = document.getElementById("copyButton").innerText;
-    document.getElementById("copyButton").innerText = "Copied! 🎉";
-    setTimeout(() => {
-        document.getElementById("copyButton").innerText = originalText;
-    }, 1500);
+    let cleaned = line.substring(listMarker.length).trim();
+    
+    if (!listMarkerMatch) {
+        cleaned = line;
+    }
+
+    cleaned = cleaned.replace(/([.?!]\s*)[a-z]/gi, (match, p1) => p1 + match.charAt(match.length - 1).toUpperCase());
+
+    if (cleaned.length > 0) {
+        cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    }
+    
+    cleaned = cleaned.replace(/(\s+)/g, ' ')
+                      .replace(/\s+\./g, '')
+                      .replace(/\.\./g, '')
+                      .replace(/\s+,/g, '')
+                      .trim();
+
+    return listMarker ? listMarker + cleaned : cleaned;
 }
 
-
-function updateStats(originalText, simplifiedText) {
-  const originalWordCount = wordCount(originalText);
-  const simplifiedWordCount = wordCount(simplifiedText);
-
-  document.getElementById("originalWordCount").innerText = `Original Words: ${originalWordCount}`;
-  document.getElementById("simplifiedWordCount").innerText = `Simplified Words: ${simplifiedWordCount}`;
-}
-
-function wordCount(text) {
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-function applyReplacements(text, map) {
-  let result = text;
-  const keys = Object.keys(map).sort((a, b) => b.length - a.length);
-  keys.forEach(key => {
-    const useBoundary = key.split(" ").length === 1;
-    const boundary = useBoundary ? "\\b" : "";
-    const regex = new RegExp(boundary + key + boundary, "gi");
-    result = result.replace(regex, (match) => {
-      const rep = map[key];
-      if (!rep) return "";
-      if (match[0] === match[0].toUpperCase()) return rep.charAt(0).toUpperCase() + rep.slice(1);
-      return rep.toLowerCase();
-    });
-  });
-  return result;
-}
-
-/**
- * FINAL FIX: Preserves list markers/indentation and avoids duplicating numbering.
- */
-function cleanAndCapitalize(text, originalLine) {
-  if (!text || text.trim().length === 0) return text;
-  
-  // 1. Capture the exact prefix/indentation from the original line
-  // Regex: Captures all leading whitespace and common list prefixes (-, *, •, 1., I., A., etc.)
-  const prefixMatch = originalLine.match(/^(\s*([I|V|X|A-Za-z0-9]+\.|\*|-|•)\s*)/);
-  const prefix = prefixMatch ? prefixMatch[0] : '';
-  
-  // 2. Determine the content part of the line (excluding the prefix)
-  let contentText = text.substring(prefix.length).trim();
-  
-  // If the line didn't match a prefix, start from the beginning of the text
-  if (!prefixMatch) {
-    contentText = text;
-  }
-  
-  // 3. Capitalize after periods (standard sentence boundary logic)
-  contentText = contentText.replace(/([.?!]\s*)[a-z]/g, (match, p1) => p1 + match.slice(-1).toUpperCase());
-  
-  // 4. Capitalize the first letter of the *content* (This is the critical step)
-  if (contentText.length > 0) {
-    contentText = contentText.charAt(0).toUpperCase() + contentText.slice(1);
-  }
-
-  // 5. Final cleanup of spacing and punctuation
-  contentText = contentText.replace(/\s+/g, " ").replace(/\s+\./g, ".").replace(/\.\./g, ".").replace(/\s+,/g, ",").trim();
-  
-  // 6. Re-apply the captured prefix and return
-  // If a prefix was found, add it back. Otherwise, return the cleaned content.
-  return prefixMatch ? prefix + contentText : contentText;
-}
 </script>
 </body>
 </html>
