@@ -3,58 +3,62 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Language Grader & Simplifier (V2.3 Comparison Focus)</title>
+<title>Language Grader & Simplifier (V2.5 Color Grade & Aesthetic)</title>
 
 <style>
-  /* CORE STYLING - Retained from V2.2 */
+  /* CORE STYLING - Reverting to Airy Aesthetic */
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0; padding: 0; color: #333;
-    background: linear-gradient(135deg, #f0f3f5 0%, #e8ecf0 100%); 
+    /* Revert to the deep, high-contrast gradient */
+    background: linear-gradient(135deg, #e0f7fa 0%, #b3e5fc 100%); 
     min-height: 100vh; display: flex; align-items: center; justify-content: center;
   }
 
   .container {
     max-width: 700px; width: 90%; margin: 32px auto; padding: 30px; border-radius: 20px;
-    background: rgba(255, 255, 255, 0.95); 
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); 
-    border: 1px solid #e0e0e0;
+    /* Increased translucency for Liquid Glass effect */
+    background: rgba(255, 255, 255, 0.85); 
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
   }
 
-  h2 { margin-top: 0; color: #1c1c1e; text-align: center; font-weight: 700; letter-spacing: -0.5px; }
+  h2 { margin-top: 0; color: #1565c0; text-align: center; font-weight: 800; letter-spacing: -0.5px; }
 
   .intro-text {
-    background: #f8f8f8; padding: 15px; border-radius: 12px; margin-bottom: 25px;
-    border: 1px solid #e5e5e5;
-    color: #444; line-height: 1.5; font-size: 15px;
+    /* Reverting to previous blue accent border */
+    background: #e3f2fd; padding: 15px; border-radius: 12px; margin-bottom: 25px;
+    border-left: 4px solid #1565c0; 
+    color: #0d47a1; line-height: 1.5; font-size: 15px;
   }
 
   textarea {
     width: 100%; min-height: 160px; padding: 15px; font-size: 16px; line-height: 1.6;
     border-radius: 12px; box-sizing: border-box; font-family: inherit; resize: vertical;
-    background: #ffffff; border: 1px solid #dcdcdc; 
+    background: #ffffff; border: 2px solid #e0e0e0; 
     transition: border-color 0.2s; margin-bottom: 10px;
   }
   
-  textarea:focus { outline: none; border-color: #007aff; box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15); }
-  textarea#outputText { background: #f9f9f9; color: #2c3e50; font-weight: 500; }
+  textarea:focus { outline: none; border-color: #2196f3; box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2); }
+  textarea#outputText { background: #f5f5f5; color: #2c3e50; font-weight: 500; }
 
   button {
-    width: 100%; padding: 16px; font-size: 18px; font-weight: 600; border: none; border-radius: 12px;
-    background: #007aff; color: white; cursor: pointer; margin-top: 5px; margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0, 122, 255, 0.3); transition: background 0.2s, transform 0.1s;
+    width: 100%; padding: 16px; font-size: 18px; font-weight: 700; border: none; border-radius: 10px;
+    background: #1565c0; color: white; cursor: pointer; margin-top: 5px; margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(21, 101, 192, 0.2); transition: background 0.2s, transform 0.1s;
   }
 
-  button:hover { background: #006ddb; }
+  button:hover { background: #0d47a1; }
   button:active { transform: scale(0.99); } 
 
   #copyButton {
-    background: #34c759; 
-    box-shadow: 0 2px 10px rgba(52, 199, 89, 0.3);
+    background: #009688; margin-top: 0; margin-bottom: 15px;
+    box-shadow: 0 4px 6px rgba(0, 150, 136, 0.2);
   }
-  #copyButton:hover { background: #28a745; }
-  
-  /* --- V2.2: Liquid Glass Metrics --- */
+  #copyButton:hover { background: #00796b; }
+
+  /* --- V2.5: Adjusted Metric Pills --- */
   .metric-bar {
       display: flex;
       justify-content: space-between;
@@ -63,17 +67,17 @@
 
   .metric-pill {
       background: rgba(255, 255, 255, 0.7); 
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px); /* Increased blur */
+      -webkit-backdrop-filter: blur(10px);
       
-      border-radius: 10px;
+      border-radius: 12px; /* Slightly rounder */
       padding: 10px 15px;
       flex: 1;
       margin: 0 5px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      box-shadow: inset 0 0 0 1px rgba(229, 229, 229, 0.5), 0 1px 3px rgba(0, 0, 0, 0.05);
+      box-shadow: inset 0 0 0 1px rgba(229, 229, 229, 0.5), 0 2px 4px rgba(0, 0, 0, 0.05); /* Softer shadow */
   }
   
   .metric-pill:first-child { margin-left: 0; }
@@ -81,26 +85,79 @@
 
   .metric-label {
       font-size: 11px;
-      font-weight: 500;
-      color: #8e8e93; 
+      font-weight: 600; /* Bolder label */
+      color: #546e7a; /* Muted gray label */
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 4px;
   }
   
   .metric-value {
-      font-size: 24px;
-      font-weight: 700;
+      font-size: 26px; /* Slightly larger value */
+      font-weight: 800; /* Bolder value */
       line-height: 1.1;
   }
 
+  /* V2.5: Word Count Color */
   .metric-words {
-      color: #007aff; 
+      color: #0d47a1; /* Deep Blue for neutral data */
   }
 
-  .metric-grade {
-      color: #ff3b30; 
+  /* V2.5: Dynamic Grade Color Classes */
+  .grade-poor { color: #d32f2f; } /* Red (Grade > 12) */
+  .grade-okay { color: #f9a825; } /* Amber (Grade 9.1 - 12.0) */
+  .grade-good { color: #1e88e5; } /* Blue (Grade 6.1 - 9.0) */
+  .grade-excellent { color: #388e3c; } /* Green (Grade <= 6.0) */
+
+
+  /* V2.4: PREMIUM PROMPT STYLES - Unchanged */
+  #premium-prompt {
+    background: linear-gradient(135deg, #fffbe5 0%, #fff8e1 100%); 
+    border: 1px solid #ffe082;
+    border-radius: 12px;
+    padding: 18px;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #424242;
+    box-shadow: 0 2px 10px rgba(255, 213, 79, 0.2);
   }
+
+  #premium-prompt h3 {
+    margin-top: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffb300; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: -0.2px;
+  }
+  #premium-prompt h3 span {
+    margin-left: 8px;
+  }
+
+  #premium-prompt p {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  #premium-button {
+    background: #ffb300; 
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(255, 179, 0, 0.3);
+    transition: background 0.2s, transform 0.1s;
+  }
+  #premium-button:hover { background: #ffa000; }
+  #premium-button:active { transform: scale(0.98); }
+
 </style>
 </head>
 
@@ -114,12 +171,12 @@
 
   <div class="metric-bar">
     <div class="metric-pill">
-      <div class="metric-label">Original Words</div>
+      <div class="metric-label">Original Word Count</div>
       <div class="metric-value metric-words" id="originalWordCount">N/A</div>
     </div>
     <div class="metric-pill">
       <div class="metric-label">Original Grade Level</div>
-      <div class="metric-value metric-grade" id="gradeLevel">N/A</div>
+      <div class="metric-value" id="gradeLevel">N/A</div>
     </div>
   </div>
   <textarea id="inputText" placeholder="Paste complex text here (e.g. 'The Lessee shall endeavor to...')"></textarea>
@@ -128,25 +185,35 @@
 
   <div class="metric-bar">
     <div class="metric-pill">
-      <div class="metric-label">Simplified Words</div>
+      <div class="metric-label">Simplified Word Count</div>
       <div class="metric-value metric-words" id="simplifiedWordCount">N/A</div>
     </div>
     <div class="metric-pill">
       <div class="metric-label">Simplified Grade Level</div>
-      <div class="metric-value metric-grade" id="simplifiedGradeLevel">N/A</div>
+      <div class="metric-value" id="simplifiedGradeLevel">N/A</div>
     </div>
   </div>
   <textarea id="outputText" readonly placeholder="Simplified text will appear here..."></textarea>
   
   <button id="copyButton" onclick="copyToClipboard()">Copy Result</button>
+  
+  <div id="premium-prompt">
+      <h3>
+          <span style="font-size: 24px;">🔒</span> 
+          <span>Unlock Advanced Context Simplification</span>
+      </h3>
+      <p>
+          The current tool uses fast dictionary lookups. For ambiguity, verb tense, and true sentence restructuring, upgrade to **Premium** and get the powerful **NLP Engine**.
+      </p>
+      <button id="premium-button">Learn About Premium</button>
+  </div>
+  
 </div>
 
 <script>
 // ==========================================
 // 1. DICTIONARIES (V2.0) - Unchanged for stability
 // ==========================================
-// (Dictionary definitions remain here)
-
 const criticalPhraseMap = {
     "We are not in a position to": "We cannot", "is not in a position to": "cannot", "are not in a position to": "cannot",
     "shall not be deemed acceptable": "is not allowed", "The necessity of the": "We need to", "is predicated upon": "depends on",
@@ -173,22 +240,19 @@ const conjunctionMap = {
 };
 
 // ==========================================
-// 2. CORE FUNCTIONS (V2.3 - Logic Unchanged)
+// 2. CORE FUNCTIONS (V2.5 - Logic Unchanged)
 // ==========================================
 function runSimplify() {
     const inputTextarea = document.getElementById('inputText');
     const inputText = inputTextarea.value;
     const outputTextarea = document.getElementById('outputText');
-    outputTextarea.value = ""; // Clear output first
+    outputTextarea.value = ""; 
 
     if (!inputText.trim().length) {
-        // V2.3: Reset all metrics to initial state for clear comparison effect
         updateStats("", "");
         return;
     }
 
-    // V2.3: Run the initial stats update here (BEFORE simplification)
-    // This is the "Before" part of the comparison
     updateStats(inputText, ""); 
     
     const simplifiedLines = inputText.split('\n').map(originalLine => {
@@ -209,9 +273,6 @@ function runSimplify() {
 
     const outputText = simplifiedLines.join('\n');
     outputTextarea.value = outputText;
-
-    // V2.3: Run the final stats update here (AFTER simplification)
-    // This is the "After" part of the comparison
     updateStats(inputText, outputText); 
 }
 
@@ -289,9 +350,7 @@ function countSyllables(text) {
     return count;
 }
 function countSentences(text) {
-    // If the text is empty, return 0 sentences to prevent division by zero
     if (!text || text.trim().length === 0) return 0;
-    // Count punctuation marks that end a sentence and ensure there is at least one sentence
     return (text.match(/([.?!])\s*[A-Z]/g) || []).length + 1;
 }
 function calculateFleschKincaid(words, sentences, syllables) {
@@ -303,36 +362,53 @@ function calculateFleschKincaid(words, sentences, syllables) {
 }
 
 // ==========================================
-// 4. UTILITIES (Updated for V2.3)
+// 4. UTILITIES (V2.5 - Added Color Logic)
 // ==========================================
+
+function getGradeColorClass(gradeValue) {
+    const grade = parseFloat(gradeValue);
+    if (isNaN(grade)) return '';
+    
+    // Flesch-Kincaid Interpretation:
+    if (grade <= 6.0) return 'grade-excellent'; // Easy for average 11-year-old (Green)
+    if (grade <= 9.0) return 'grade-good';      // Easy to understand (Blue)
+    if (grade <= 12.0) return 'grade-okay';     // Understandable by most adults (Amber/Yellow)
+    return 'grade-poor';                        // Difficult, likely college level or higher (Red)
+}
 
 function updateStats(originalText, simplifiedText) {
     const origWords = wordCount(originalText);
     const simpWords = wordCount(simplifiedText);
 
-    // Calculate original metrics
     const origSentences = countSentences(originalText);
     const origSyllables = countSyllables(originalText);
     const origGrade = calculateFleschKincaid(origWords, origSentences, origSyllables);
     
-    // Calculate simplified metrics
     const simpSentences = countSentences(simplifiedText);
     const simpSyllables = countSyllables(simplifiedText);
     const simpGrade = calculateFleschKincaid(simpWords, simpSentences, simpSyllables);
 
-    // V2.3: Reset Original Metrics if simplifiedText is empty (i.e., before the button is pressed)
+    const originalGradeElement = document.getElementById('gradeLevel');
+    const simplifiedGradeElement = document.getElementById('simplifiedGradeLevel');
+    
     if (!simplifiedText) {
+        // Before simplification: only update original metrics
         document.getElementById('originalWordCount').innerText = origWords || 'N/A';
-        document.getElementById('gradeLevel').innerText = origWords > 0 ? origGrade : 'N/A';
-        // Ensure simplified output metrics are cleared before running the simplification
+        originalGradeElement.innerText = origWords > 0 ? origGrade : 'N/A';
+        originalGradeElement.className = getGradeColorClass(origGrade);
+
         document.getElementById('simplifiedWordCount').innerText = 'N/A';
-        document.getElementById('simplifiedGradeLevel').innerText = 'N/A';
+        simplifiedGradeElement.innerText = 'N/A';
+        simplifiedGradeElement.className = '';
     } else {
-        // Update both sets of metrics after simplification is complete
+        // After simplification: update both
         document.getElementById('originalWordCount').innerText = origWords;
-        document.getElementById('gradeLevel').innerText = origGrade;
+        originalGradeElement.innerText = origGrade;
+        originalGradeElement.className = getGradeColorClass(origGrade);
+        
         document.getElementById('simplifiedWordCount').innerText = simpWords;
-        document.getElementById('simplifiedGradeLevel').innerText = simpGrade;
+        simplifiedGradeElement.innerText = simpGrade;
+        simplifiedGradeElement.className = getGradeColorClass(simpGrade);
     }
 }
 
@@ -358,9 +434,11 @@ function copyToClipboard() {
     }, 1500);
 }
 
-// V2.3: Initial call to set metrics to N/A on load (only needed once)
 document.addEventListener('DOMContentLoaded', () => {
     updateStats('', '');
+    document.getElementById('premium-button').onclick = function() {
+        alert("The Premium Tier is launching soon! Get ready for NLP-powered simplification.");
+    };
 });
 </script>
 </body>
