@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Language Grader & Simplifier (V1.4)</title>
+<title>Language Grader & Simplifier (V2.0 Hardened)</title>
 
 <style>
-  /* CORE STYLING */
+  /* CORE STYLING - remains the same as V1.5 */
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0; padding: 0; color: #333;
@@ -60,10 +60,10 @@
       color: #546e7a; 
       font-weight: 600; 
       margin-bottom: 5px; 
-      flex-wrap: wrap; /* Allows stats to wrap on small screens */
+      flex-wrap: wrap;
   }
   .stat-row span {
-      flex: 1 1 45%; /* Distributes space */
+      flex: 1 1 45%; 
   }
   #gradeLevel, #simplifiedGradeLevel {
       font-weight: 800;
@@ -76,10 +76,10 @@
 
 <body>
 <div class="container">
-  <h2>Language Grader & Simplifier (V1.4)</h2>
+  <h2>Language Grader & Simplifier (V2.0 Hardened)</h2>
 
   <div class="intro-text">
-      The tool now calculates the **Flesch-Kincaid Grade Level** to objectively measure readability. Lower scores are better!
+      **Proactive Stability.** The dictionary processing order has been hardened to prevent future dictionary additions from accidentally breaking core fixes.
   </div>
 
   <div class="stat-row">
@@ -101,32 +101,53 @@
 
 <script>
 // ==========================================
-// 1. DICTIONARIES (V1.4)
+// 1. DICTIONARIES (V2.0 - PRIORITY SEPARATION)
 // ==========================================
-// Dictionaries remain the same as the stable V1.3 code
 
-const phraseMap = {
-    "We are not in a position to": "We cannot", "is not in a position to": "cannot", "are not in a position to": "cannot",
-    "The necessity of the": "We need to", "receipt of the": "getting the",
-    "shall not be deemed acceptable": "is not allowed", "is currently contingent upon": "depends on",
-    "is predicated upon": "depends on", "is hereby deemed a material breach of this agreement": "is a major break of this contract",
-    "notwithstanding the provisions": "even with the rules", "The Lessee shall": "The renter must",
-    "The Lessor shall": "The owner must", "is authorized to": "can",
-    "in the event of": "if", "prior to": "before", "subsequent to": "after",
-    "due to the fact that": "because", "it is important to note that ": "", "it should be noted that ": "",
-    "make use of": "use", "conduct an evaluation": "check"
+// PHASE 1: CRITICAL PHRASES - Must run first to preserve structural intent
+const criticalPhraseMap = {
+    // Structural Fixes
+    "We are not in a position to": "We cannot", 
+    "is not in a position to": "cannot", 
+    "are not in a position to": "cannot",
+    "shall not be deemed acceptable": "is not allowed", 
+    "The necessity of the": "We need to", 
+    "is predicated upon": "depends on",
+    "is currently contingent upon": "depends on",
+
+    // Dictionary Fixes
+    "the aforementioned": "this", 
+    "the receipt of the": "getting the",
+    "it is important to note that ": "", 
+    "it should be noted that ": "",
 };
 
+// PHASE 2: LONG PHRASES - Must run before single words
+const longPhraseMap = {
+    "is hereby deemed a material breach of this agreement": "is a major break of this contract",
+    "notwithstanding the provisions": "even with the rules", 
+    "The Lessee shall": "The renter must",
+    "The Lessor shall": "The owner must", 
+    "is authorized to": "can",
+    "in the event of": "if", 
+    "prior to": "before", 
+    "subsequent to": "after",
+    "due to the fact that": "because", 
+    "make use of": "use", 
+    "conduct an evaluation": "check"
+};
+
+// PHASE 3: SINGLE WORDS - Runs last to clean up remaining single terms
 const wordMap = {
-    "aforementioned": "this", "irrefutable": "clear", "necessity": "need",
-    "revision": "change", "protocols": "rules", "guidelines": "rules",
-    "modification": "change", "shall": "must", "furnish": "give",
-    "verification": "check", "commence": "start", "accrued": "earned",
-    "transmit": "send", "said": "the", "rigorous": "strict",
-    "expeditiously": "fast", "assistance": "help", "ultimately": "lastly",
-    "methodology": "method", "objective": "goal", "consequently": "so",
+    "irrefutable": "clear", "necessity": "need", "revision": "change", 
+    "protocols": "rules", "guidelines": "rules", "modification": "change", 
+    "shall": "must", "furnish": "give", "verification": "check", "commence": "start", 
+    "accrued": "earned", "transmit": "send", "said": "the", "rigorous": "strict", 
+    "expeditiously": "fast", "assistance": "help", "ultimately": "lastly", 
+    "methodology": "method", "objective": "goal", "consequently": "so", 
     "ameliorate": "fix", "evaluation": "check", "establishment": "start"
 };
+
 
 const conjunctionMap = {
     "furthermore": "Also", "moreover": "Also", "nevertheless": "But",
@@ -134,7 +155,7 @@ const conjunctionMap = {
 };
 
 // ==========================================
-// 2. CORE FUNCTIONS
+// 2. CORE FUNCTIONS (V2.0 - PRIORITY EXECUTION)
 // ==========================================
 
 function runSimplify() {
@@ -153,8 +174,12 @@ function runSimplify() {
 
         let outputLine = originalLine;
         
-        outputLine = applyReplacements(outputLine, phraseMap);
+        // V2.0 HARDENING: Run replacements in prioritized order
+        outputLine = applyReplacements(outputLine, criticalPhraseMap);
+        outputLine = applyReplacements(outputLine, longPhraseMap);
         outputLine = applyReplacements(outputLine, wordMap);
+        
+        // Final Formatting and Cleanup
         outputLine = handleConjunctions(outputLine);
         outputLine = fixRedundancy(outputLine);
         outputLine = cleanAndCapitalize(outputLine);
@@ -217,8 +242,64 @@ function cleanAndCapitalize(line) {
     return cleaned;
 }
 
+// ==========================================
+// 3. READABILITY GRADER FUNCTIONS (Copied from V1.5)
+// ==========================================
+function countSyllables(text) {
+    let count = 0;
+    const words = text.toLowerCase().match(/\b[a-z]+\b/g) || [];
+
+    words.forEach(word => {
+        word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+        word = word.replace(/^y/, '');
+        const match = word.match(/[aeiouy]{1,2}/g);
+        let syllables = match ? match.length : 0;
+        if (syllables === 0 && word.length > 0) {
+            syllables = 1;
+        }
+        count += syllables;
+    });
+    return count;
+}
+
+function countSentences(text) {
+    return (text.match(/([.?!])\s*[A-Z]/g) || []).length + 1;
+}
+
+function calculateFleschKincaid(words, sentences, syllables) {
+    if (words === 0 || sentences === 0) return 0;
+    const avgWordsPerSentence = words / sentences;
+    const avgSyllablesPerWord = syllables / words;
+    const gradeLevel = (0.39 * avgWordsPerSentence) + (11.8 * avgSyllablesPerWord) - 15.59;
+    return Math.max(0, gradeLevel).toFixed(1);
+}
+
+// ==========================================
+// 4. UTILITIES (Copied from V1.5)
+// ==========================================
+
+function updateStats(originalText, simplifiedText) {
+    const origWords = wordCount(originalText);
+    const simpWords = wordCount(simplifiedText);
+    const origSentences = countSentences(originalText);
+    const origSyllables = countSyllables(originalText);
+    const origGrade = calculateFleschKincaid(origWords, origSentences, origSyllables);
+    const simpSentences = countSentences(simplifiedText);
+    const simpSyllables = countSyllables(simplifiedText);
+    const simpGrade = calculateFleschKincaid(simpWords, simpSentences, simpSyllables);
+    document.getElementById('originalWordCount').innerText = origWords;
+    document.getElementById('simplifiedWordCount').innerText = simpWords;
+    document.getElementById('gradeLevel').innerText = origWords > 0 ? origGrade : 'N/A';
+    document.getElementById('simplifiedGradeLevel').innerText = simpWords > 0 ? simpGrade : 'N/A';
+}
+
+function wordCount(text) {
+    return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
 function applyReplacements(text, map) {
     let result = text;
+    // Sort keys by length descending to catch longer phrases first - THIS REMAINS CRITICAL WITHIN EACH PHASE
     const sortedKeys = Object.keys(map).sort((a, b) => b.length - a.length);
 
     sortedKeys.forEach(complex => {
@@ -240,79 +321,6 @@ function applyReplacements(text, map) {
     });
     return result;
 }
-
-// ==========================================
-// 3. READABILITY GRADER FUNCTIONS (NEW)
-// ==========================================
-
-function countSyllables(text) {
-    // This is a highly simplified, non-dictionary method.
-    // It's not 100% accurate, but it's consistent and fast.
-    let count = 0;
-    const words = text.toLowerCase().match(/\b[a-z]+\b/g) || [];
-
-    words.forEach(word => {
-        // Base count by counting vowels
-        word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, ''); // removes silent E and common endings
-        word = word.replace(/^y/, ''); // removes leading Y
-        const match = word.match(/[aeiouy]{1,2}/g); // counts vowel groups
-        let syllables = match ? match.length : 0;
-
-        // Ensure every word has at least one syllable
-        if (syllables === 0 && word.length > 0) {
-            syllables = 1;
-        }
-        count += syllables;
-    });
-
-    return count;
-}
-
-function countSentences(text) {
-    // Count periods, question marks, and exclamation marks, avoiding decimals/abbreviations
-    // This is still fragile but is standard for simple grade level formulas.
-    return (text.match(/([.?!])\s*[A-Z]/g) || []).length + 1;
-}
-
-function calculateFleschKincaid(words, sentences, syllables) {
-    if (words === 0 || sentences === 0) return 0;
-
-    const avgWordsPerSentence = words / sentences;
-    const avgSyllablesPerWord = syllables / words;
-
-    // Flesch-Kincaid Grade Level Formula
-    const gradeLevel = (0.39 * avgWordsPerSentence) + (11.8 * avgSyllablesPerWord) - 15.59;
-    
-    // Clamp to a reasonable range
-    return Math.max(0, gradeLevel).toFixed(1);
-}
-
-// ==========================================
-// 4. UTILITIES (Updated)
-// ==========================================
-
-function updateStats(originalText, simplifiedText) {
-    const origWords = wordCount(originalText);
-    const simpWords = wordCount(simplifiedText);
-
-    const origSentences = countSentences(originalText);
-    const origSyllables = countSyllables(originalText);
-    const origGrade = calculateFleschKincaid(origWords, origSentences, origSyllables);
-    
-    const simpSentences = countSentences(simplifiedText);
-    const simpSyllables = countSyllables(simplifiedText);
-    const simpGrade = calculateFleschKincaid(simpWords, simpSentences, simpSyllables);
-
-    document.getElementById('originalWordCount').innerText = origWords;
-    document.getElementById('simplifiedWordCount').innerText = simpWords;
-    document.getElementById('gradeLevel').innerText = origWords > 0 ? origGrade : 'N/A';
-    document.getElementById('simplifiedGradeLevel').innerText = simpWords > 0 ? simpGrade : 'N/A';
-}
-
-function wordCount(text) {
-    return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
 function copyToClipboard() {
     const outputTextarea = document.getElementById('outputText');
     if (outputTextarea.value.trim().length === 0) {
