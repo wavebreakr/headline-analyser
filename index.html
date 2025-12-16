@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Ultimate Language Simplifier (NLP)</title>
+<title>Ultimate Language Simplifier (V2.1 - Robust NLP)</title>
 
-<script src="https://unpkg.com/compromise@14.0.0/builds/compromise.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/compromise/14.0.0/compromise.min.js"></script>
 
 <style>
-  /* CORE STYLING (Kept clean and consistent) */
+  /* CORE STYLING */
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0; padding: 0; color: #333;
@@ -61,7 +61,7 @@
 
 <body>
 <div class="container">
-  <h2>Plain English Converter (V2.0 NLP)</h2>
+  <h2>Plain English Converter (V2.1 - Robust NLP)</h2>
 
   <div class="intro-text">
       <strong>New and improved.</strong> This version uses smarter Natural Language Processing to ensure better grammar and fix structural issues.
@@ -153,13 +153,21 @@ const conjunctions = {
 
 function runSimplify() {
     const input = document.getElementById('inputText').value;
+    const outputArea = document.getElementById('outputText');
     
     if (!input.trim()) {
-        document.getElementById('outputText').value = "";
+        outputArea.value = "";
         updateStats(0, 0);
         return;
     }
 
+    // CRITICAL CHECK: Ensure the compromise library (nlp) has loaded.
+    if (typeof nlp === 'undefined') {
+        outputArea.value = "ERROR: The simplification library failed to load. Please check your internet connection or try again. This tool needs the NLP library to function.";
+        updateStats(countWords(input), 0);
+        return;
+    }
+    
     // 1. Load the text into the compromise NLP object
     let doc = nlp(input);
 
@@ -167,7 +175,7 @@ function runSimplify() {
     
     // Fix "We are not in a position to" -> "We cannot" (Grammar Fix)
     doc.match('(we|i|they|you) (are|am|is) not in a position to').replaceWith('$1 cannot');
-    doc.match('not in a position to').replaceWith('cannot'); // General catch-all
+    doc.match('not in a position to').replaceWith('cannot'); 
 
     // Fix complex legal phrase: "shall not be deemed acceptable" -> "is not allowed"
     doc.match('(shall|will) not be deemed acceptable').replaceWith('is not allowed');
@@ -175,11 +183,11 @@ function runSimplify() {
     // Remove Redundancy (Adverb/Adjective stripping)
     doc.match('(very|highly|extremely) #Adjective').replaceWith('$2');
 
-    // 3. Apply Tagged Replacements
+    // 3. Apply Tagged and Phrasal Replacements
     for (const complex in smartReplacements) {
         const item = smartReplacements[complex];
         
-        if (item.tag) { // Tagged word replacement
+        if (item.tag) { // Tagged word replacement (e.g., Verb)
             doc.match(item.tag).match(complex).replaceWith(item.replace);
         } else { // Untagged phrase replacement
             doc.match(complex).replaceWith(item);
@@ -193,7 +201,6 @@ function runSimplify() {
     });
 
     // 5. Final Output Cleanup
-    // Compromise handles sentence capitalization and spacing automatically using the .text() method.
     let result = doc.text();
 
     // Final string cleanup for any remaining punctuation weirdness
@@ -201,12 +208,12 @@ function runSimplify() {
     result = result.replace(/\s+\./g, '.');
     result = result.replace(/\.\./g, '.');
 
-    document.getElementById('outputText').value = result;
+    outputArea.value = result;
     updateStats(countWords(input), countWords(result));
 }
 
 // ==========================================
-// 3. UTILITIES (Simplified)
+// 3. UTILITIES
 // ==========================================
 
 function countWords(str) {
