@@ -3,9 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Ultimate Language Simplifier</title>
+<title>Ultimate Language Simplifier (NLP)</title>
+
+<script src="https://unpkg.com/compromise@14.0.0/builds/compromise.min.js"></script>
 
 <style>
+  /* CORE STYLING (Kept clean and consistent) */
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0; padding: 0; color: #333;
@@ -14,252 +17,127 @@
   }
 
   .container {
-    max-width: 650px; width: 90%; margin: 32px auto; padding: 30px; border-radius: 20px;
-    background: rgba(255, 255, 255, 0.25);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+    max-width: 700px; width: 90%; margin: 32px auto; padding: 30px; border-radius: 20px;
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.6);
   }
 
-  h2 { margin-top: 0; color: #1a237e; text-align: center; font-weight: 700; letter-spacing: -0.5px; }
+  h2 { margin-top: 0; color: #1565c0; text-align: center; font-weight: 800; letter-spacing: -0.5px; }
 
-  /* INTRO TEXT STYLES */
   .intro-text {
-    background: rgba(255, 255, 255, 0.4);
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    border-left: 5px solid #42a5f5; /* Light blue accent bar */
+    background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 25px;
+    border-left: 4px solid #1565c0; color: #0d47a1; line-height: 1.5; font-size: 15px;
   }
-
-  .intro-text p {
-    margin: 0;
-    font-size: 15px;
-    line-height: 1.5;
-    color: #1a237e;
-    font-weight: 500;
-  }
-  /* END INTRO TEXT STYLES */
 
   textarea {
-    width: 100%; min-height: 180px; padding: 15px; font-size: 16px; line-height: 1.6;
+    width: 100%; min-height: 160px; padding: 15px; font-size: 16px; line-height: 1.6;
     border-radius: 12px; box-sizing: border-box; font-family: inherit; resize: vertical;
-    background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(255, 255, 255, 0.5);
-    transition: all 0.3s ease; margin-bottom: 8px;
+    background: #ffffff; border: 2px solid #e0e0e0;
+    transition: border-color 0.2s; margin-bottom: 10px;
   }
   
-  textarea:focus { background: white; outline: none; border-color: #42a5f5; }
-
-  .action-area { margin: 15px 0 15px; }
+  textarea:focus { outline: none; border-color: #2196f3; }
+  textarea#outputText { background: #f5f5f5; color: #2c3e50; font-weight: 500; }
 
   button {
-    width: 100%; padding: 18px; font-size: 18px; font-weight: 700; border: none; border-radius: 12px;
-    background: #1a237e; color: white; cursor: pointer;
-    box-shadow: 0 4px 15px rgba(26, 35, 126, 0.3); transition: all 0.2s;
+    width: 100%; padding: 16px; font-size: 18px; font-weight: 700; border: none; border-radius: 10px;
+    background: #1565c0; color: white; cursor: pointer; margin-top: 5px; margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(21, 101, 192, 0.2); transition: background 0.2s, transform 0.1s;
   }
 
-  button:hover { background: #283593; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26, 35, 126, 0.4); }
-
-  #outputText { background: rgba(255, 255, 255, 0.5); font-weight: 500; }
-  
-  /* STATS AND COPY BUTTON STYLES */
-  
-  .stat-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-  
-  .word-count {
-    font-size: 14px;
-    color: #3949ab;
-    padding: 4px 8px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.5);
-    font-weight: 500;
-  }
+  button:hover { background: #0d47a1; transform: translateY(-1px); }
+  button:active { transform: translateY(1px); }
 
   #copyButton {
-    padding: 10px;
-    font-size: 16px;
-    font-weight: 600;
-    margin-top: -5px;
-    margin-bottom: 15px;
-    background: #42a5f5;
-    box-shadow: 0 2px 5px rgba(66, 165, 245, 0.4);
+    background: #009688; margin-top: 0; margin-bottom: 15px;
   }
+  #copyButton:hover { background: #00796b; }
   
-  #copyButton:hover { 
-    background: #1e88e5; 
-    box-shadow: 0 3px 6px rgba(30, 136, 229, 0.5);
-  }
+  .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: #546e7a; font-weight: 600; margin-bottom: 5px; }
 </style>
 </head>
 
 <body>
 <div class="container">
-  <h2>Simplifier</h2>
+  <h2>Plain English Converter (V2.0 NLP)</h2>
 
   <div class="intro-text">
-      <p>
-          <strong>Instantly achieve clarity and precision.</strong> It takes complex text—the jargon, long phrases, and heavy words—and converts it into simple, direct, and easy-to-read language.
-      </p>
-  </div>
-  <textarea id="inputText" placeholder="Paste complex text here..."></textarea>
-  <div class="stat-row">
-    <div class="word-count" id="originalWordCount">Original Words: 0</div>
+      <strong>New and improved.</strong> This version uses smarter Natural Language Processing to ensure better grammar and fix structural issues.
   </div>
 
-  <div class="action-area">
-    <button onclick="runSimplify()">Simplify Now</button>
-  </div>
-
-  <textarea id="outputText" readonly placeholder="Resulting simple text..."></textarea>
-  
-  <button id="copyButton" onclick="copyToClipboard()">Copy Simplified Text</button>
-  
   <div class="stat-row">
-    <div class="word-count" id="simplifiedWordCount">Simplified Words: 0</div>
+    <span id="originalWordCount">Words: 0</span>
   </div>
+  <textarea id="inputText" placeholder="Paste complex text here (e.g. 'The Lessee shall endeavor to...')"></textarea>
+
+  <button onclick="runSimplify()">Simplify Text</button>
+
+  <div class="stat-row">
+    <span id="simplifiedWordCount">Words: 0</span>
+  </div>
+  <textarea id="outputText" readonly placeholder="Simplified text will appear here..."></textarea>
+  
+  <button id="copyButton" onclick="copyToClipboard()">Copy Result</button>
 </div>
 
 <script>
-// --- DICTIONARIES (EXPANDED FOR TEST A FIXES) ---
+// ==========================================
+// 1. DICTIONARY & CONFIGURATION
+// ==========================================
 
-const phraseMap = {
-    // FIX A: Avoid "We are cannot" by targeting the whole negative phrase
-    "We are not in a position to": "We cannot",
-    // FIX B: New legal/business terms
-    "shall not be deemed acceptable": "is not allowed", 
-    "is hereby deemed a material breach of this agreement": "is a major break of this contract",
-    "notwithstanding the provisions": "even with the rules",
-    "is currently contingent upon": "depends on",
-    "The Lessee shall": "The renter must",
-    "The Lessor shall": "The owner must",
-    
-    // Existing/Enhanced
-    "is authorized to": "can",
-    "is permitted to": "can",
-    "in the event of": "if",
-    "not later than": "by",
-    "commencement of": "starting",
-    "utilisation": "use",
-    "endeavor": "try",
-    "in order to": "to",
-    "prior to": "before",
-    "subsequent to": "after",
-    "at this point in time": "now",
-    "at that point in time": "then",
-    "due to the fact that": "because",
-    "owing to the fact that": "because",
-    "as a result of": "because",
-    "with regard to": "about",
-    "in relation to": "about",
-    "in respect of": "about",
-    "is capable of": "can",
-    "has the ability to": "can",
-    "has the capacity to": "can",
-    "there is a need to": "we must",
-    "it is important to note that ": "",
-    "it should be noted that ": "",
-    "the purpose of this is to ": "",
-    "it has been determined that ": "",
-    "make use of": "use",
-    "conduct an evaluation": "check",
-    "take into consideration": "consider",
-    "provides guidance for": "guides",
-    "give an indication of": "show",
-    "in the event that": "if",
-    "notwithstanding the fact that": "although",
-    "in the absence of": "without",
-    "not in a position to": "cannot", // This can stay, but the more specific fix above is better for that case
-    "on the basis of": "by",
-    "at a later date": "later",
-    "perform a review of": "review",
-    "is in receipt of": "gets",
-    "in close proximity to": "near",
-    "a number of": "many",
-    "do an assessment of": "assess",
-    "it is essential that": "we must",
-    "shall consult with": "must ask",
-    "will consult with": "will ask"
+// This map uses 'tags' from compromise.js to target specific word types.
+const smartReplacements = {
+    // [TAGGED REPLACEMENTS]
+    // Only replace the verb 'state', not the noun 'state' (like New York State)
+    'state': { tag: '#Verb', replace: 'say' },
+    'utilize': { tag: '#Verb', replace: 'use' },
+    'terminate': { tag: '#Verb', replace: 'end' },
+    'commence': { tag: '#Verb', replace: 'start' },
+    'expedite': { tag: '#Verb', replace: 'speed up' },
+    'facilitate': { tag: '#Verb', replace: 'help' },
+    'ascertain': { tag: '#Verb', replace: 'check' },
+    'demonstrate': { tag: '#Verb', replace: 'show' },
+    'necessitate': { tag: '#Verb', replace: 'require' },
+    'transmit': { tag: '#Verb', replace: 'send' },
+    'furnish': { tag: '#Verb', replace: 'give' },
+    'submit': { tag: '#Verb', replace: 'send' },
+    'retain': { tag: '#Verb', replace: 'keep' },
+    'procure': { tag: '#Verb', replace: 'buy' },
+    'consult': { tag: '#Verb', replace: 'ask' },
+
+    // [PHRASAL REPLACEMENTS] - Uses standard matching since it's hard to tag phrases
+    'in the event of': 'if',
+    'due to the fact that': 'because',
+    'prior to the receipt of': 'before getting',
+    'prior to': 'before',
+    'subsequent to': 'after',
+    'not later than': 'by',
+    'at this point in time': 'now',
+    'until such time as': 'until',
+    'with reference to': 'about',
+    'with regard to': 'about',
+    'in respect of': 'about',
+    'it is important to note that': '', // Deletion
+    'it should be noted that': '',      // Deletion
+    'The Lessee shall': 'The renter must',
+    'The Lessee': 'The renter',
+    'The Lessor shall': 'The owner must',
+    'The Lessor': 'The owner',
+    'shall endeavor to': 'will try to',
+    'make use of': 'use',
+    'is contingent upon': 'depends on',
+    'is predicated upon': 'depends on',
+    'notwithstanding': 'even with',
+    'irrefutable': 'clear',
+    'aforementioned': 'this',
+    'said': 'the',
+    'evaluation': 'check',
+    'assessment': 'check'
 };
 
-const wordMap = {
-    // FIX A: Add missed words
-    "aforementioned": "this", 
-    "shall": "must",
-    "irrefutable": "clear",
-    // FIX B: Existing and enhanced words
-    "necessitate": "require", 
-    "implementation": "use",
-    "validation": "testing",
-    "stipulated": "written",
-    "accrued": "earned",
-    "transmit": "send",
-    "said": "the",
-    "rigorous": "strict",
-    "exhibit": "show",
-    "exhibiting": "showing",
-    "acquire": "get",
-    "acquired": "got",
-    "demonstrate": "show",
-    "demonstrates": "shows",
-    "expedite": "speed up",
-    "expeditiously": "fast",
-    "possesses": "has",
-    "remuneration": "pay",
-    "dialogue": "talk",
-    "monetary": "money",
-    "commence": "start",
-    "commencing": "starting",
-    "utilise": "use",
-    "utilising": "using",
-    "utilized": "used",
-    "leverage": "use",
-    "implement": "use",
-    "facilitate": "help",
-    "comprehensive": "full",
-    "numerous": "many",
-    "significant": "big",
-    "insufficient": "not enough",
-    "optimal": "best",
-    "approximately": "about",
-    "assistance": "help",
-    "prioritise": "focus on",
-    "initially": "first",
-    "ultimately": "lastly",
-    "methodology": "method",
-    "objective": "goal",
-    "discontinue": "stop",
-    "subsequently": "later",
-    "consequently": "so",
-    "regarding": "about",
-    "ascertain": "check",
-    "ameliorate": "fix",
-    "delineate": "show",
-    "individuals": "people",
-    "organisations": "groups",
-    "evaluation": "check",
-    "verification": "check",
-    "establishment": "start",
-    "requirements": "rules",
-    "commitment": "pledge",
-    "determination": "decision",
-    "necessity": "need",
-    "modification": "change",
-    "clarification": "explain",
-    "contingency": "chance",
-    "submit": "send",
-    "advise": "tell",
-    "furnish": "give",
-    "retain": "keep",
-    "procure": "buy",
-    "consult": "ask"
-};
-
-const conjunctionMap = {
+const conjunctions = {
     "furthermore": "Also",
     "moreover": "Also",
     "nevertheless": "But",
@@ -269,180 +147,87 @@ const conjunctionMap = {
     "accordingly": "So"
 };
 
-// --- CORE FUNCTIONS (Only cleanAndCapitalize is heavily modified) ---
+// ==========================================
+// 2. THE NLP ENGINE
+// ==========================================
 
 function runSimplify() {
-    const inputText = document.getElementById('inputText').value;
-    document.getElementById('outputText').value = "";
+    const input = document.getElementById('inputText').value;
     
-    if (!inputText.trim().length) {
-        updateStats("", "");
+    if (!input.trim()) {
+        document.getElementById('outputText').value = "";
+        updateStats(0, 0);
         return;
     }
 
-    const simplifiedLines = inputText.split('\n').map(originalLine => {
-        if (originalLine.trim().length === 0) {
-            return originalLine;
-        }
+    // 1. Load the text into the compromise NLP object
+    let doc = nlp(input);
 
-        let outputLine = originalLine;
+    // 2. Handle specific structural and grammatical improvements (CRITICAL FIXES)
+    
+    // Fix "We are not in a position to" -> "We cannot" (Grammar Fix)
+    doc.match('(we|i|they|you) (are|am|is) not in a position to').replaceWith('$1 cannot');
+    doc.match('not in a position to').replaceWith('cannot'); // General catch-all
+
+    // Fix complex legal phrase: "shall not be deemed acceptable" -> "is not allowed"
+    doc.match('(shall|will) not be deemed acceptable').replaceWith('is not allowed');
+    
+    // Remove Redundancy (Adverb/Adjective stripping)
+    doc.match('(very|highly|extremely) #Adjective').replaceWith('$2');
+
+    // 3. Apply Tagged Replacements
+    for (const complex in smartReplacements) {
+        const item = smartReplacements[complex];
         
-        outputLine = simplifyLine(outputLine);
-        outputLine = fixRedundancy(outputLine);
-        outputLine = cleanAndCapitalize(outputLine, originalLine);
-        
-        return outputLine;
-    });
-
-    const outputText = simplifiedLines.join('\n');
-    document.getElementById('outputText').value = outputText;
-    updateStats(inputText, outputText);
-}
-
-function simplifyLine(line) {
-    let result = line;
-    
-    result = applyReplacements(result, phraseMap);
-    result = applyReplacements(result, wordMap);
-
-    for (const complex in conjunctionMap) {
-        const simple = conjunctionMap[complex];
-        const regex = new RegExp("[,;]\\s*" + complex + "\\s*([\\.|,|\\s])", "gi");
-        result = result.replace(regex, ". " + simple + ". ");
-    }
-    
-    result = result.replace(/; \s*([A-Z])/gi, ". $1"); 
-    result = result.replace(/, and /gi, " and ");
-    result = result.replace(/, but /gi, " but ");
-    result = result.replace(/, But /gi, ". But "); 
-
-    return result;
-}
-
-function fixRedundancy(line) {
-    const weakAdverbs = ["most", "very", "highly", "result", "thorough", "robust", "full"];
-    const absoluteAdjectives = ["best", "full", "perfect", "complete", "unique", "big", "strict", "major"];
-    let result = line;
-
-    weakAdverbs.forEach(adverb => {
-        absoluteAdjectives.forEach(adjective => {
-            const regex = new RegExp("\\b" + adverb + "\\s+" + adjective + "\\b", "gi");
-            result = result.replace(regex, (match) => {
-                const lowerMatch = match.toLowerCase();
-                if (lowerMatch.includes(adverb) && lowerMatch.includes(adjective)) {
-                    return match.includes(adjective.toUpperCase()) ? adjective.toUpperCase() : adjective;
-                }
-                return adjective;
-            });
-        });
-    });
-
-    return result;
-}
-
-function cleanAndCapitalize(line, originalLine) {
-    if (!line || line.trim().length === 0) {
-        return line;
-    }
-    
-    const listMarkerMatch = originalLine.match(/\s*([I|V|X|A-Za-z0-9]+\.|\*|-|•)\s*/);
-    const listMarker = listMarkerMatch ? listMarkerMatch[0] : "";
-    
-    let cleaned = line.substring(listMarker.length); // Keep the start of line
-    
-    if (!listMarkerMatch) {
-        cleaned = line;
-    }
-    
-    // CRITICAL FIX: Ensure leading whitespace is trimmed after replacements
-    cleaned = cleaned.trim(); 
-    
-    // 1. Ensure sentence start capitalization (after period, question mark, or exclamation mark)
-    cleaned = cleaned.replace(/([.?!]\s*)[a-z]/gi, (match, p1) => p1 + match.charAt(match.length - 1).toUpperCase());
-
-    // 2. Capitalize the first letter of the cleaned line if it's a letter
-    if (cleaned.length > 0 && cleaned.match(/[a-zA-Z]/)) {
-        // Find the index of the first letter
-        const firstLetterIndex = cleaned.search(/[a-zA-Z]/);
-        if (firstLetterIndex !== -1) {
-            cleaned = cleaned.substring(0, firstLetterIndex) + 
-                      cleaned.charAt(firstLetterIndex).toUpperCase() + 
-                      cleaned.slice(firstLetterIndex + 1);
+        if (item.tag) { // Tagged word replacement
+            doc.match(item.tag).match(complex).replaceWith(item.replace);
+        } else { // Untagged phrase replacement
+            doc.match(complex).replaceWith(item);
         }
     }
-    
-    // 3. General cleanup
-    cleaned = cleaned.replace(/(\s+)/g, ' ')
-                      .replace(/\s+\./g, '')
-                      .replace(/\.\./g, '')
-                      .replace(/\s+,/g, '')
-                      .trim();
 
-    return listMarker ? listMarker + cleaned : cleaned;
+    // 4. Handle Conjunctions (Split complex sentence into two simple ones)
+    Object.keys(conjunctions).forEach(conj => {
+        const replacement = conjunctions[conj];
+        doc.match(conj).replaceWith('. ' + replacement + '.');
+    });
+
+    // 5. Final Output Cleanup
+    // Compromise handles sentence capitalization and spacing automatically using the .text() method.
+    let result = doc.text();
+
+    // Final string cleanup for any remaining punctuation weirdness
+    result = result.replace(/\s+,/g, ',');
+    result = result.replace(/\s+\./g, '.');
+    result = result.replace(/\.\./g, '.');
+
+    document.getElementById('outputText').value = result;
+    updateStats(countWords(input), countWords(result));
 }
 
-// --- UTILITY FUNCTIONS (Unchanged) ---
+// ==========================================
+// 3. UTILITIES (Simplified)
+// ==========================================
+
+function countWords(str) {
+    return str.trim().split(/\s+/).filter(n => n).length;
+}
+
+function updateStats(orig, simp) {
+    document.getElementById('originalWordCount').innerText = `Words: ${orig}`;
+    document.getElementById('simplifiedWordCount').innerText = `Words: ${simp}`;
+}
 
 function copyToClipboard() {
-    const outputTextarea = document.getElementById('outputText');
-    if (outputTextarea.value.trim().length === 0) {
-        alert("Nothing to copy!");
-        return;
-    }
-    outputTextarea.select();
-    outputTextarea.setSelectionRange(0, 99999);
+    const el = document.getElementById('outputText');
+    if (!el.value) return;
+    el.select();
     document.execCommand('copy');
-    
-    const copyButton = document.getElementById('copyButton');
-    const originalText = copyButton.innerText;
-    copyButton.innerText = "Copied! 🎉";
-    
-    setTimeout(() => {
-        copyButton.innerText = originalText;
-    }, 1500);
+    const btn = document.getElementById('copyButton');
+    const oldText = btn.innerText;
+    btn.innerText = "Copied! 🎉";
+    setTimeout(() => btn.innerText = oldText, 2000);
 }
-
-function updateStats(originalText, simplifiedText) {
-    const originalCount = wordCount(originalText);
-    const simplifiedCount = wordCount(simplifiedText);
-    
-    document.getElementById('originalWordCount').innerText = "Original Words: " + originalCount;
-    document.getElementById('simplifiedWordCount').innerText = "Simplified Words: " + simplifiedCount;
-}
-
-function wordCount(text) {
-    return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-function applyReplacements(text, map) {
-    let result = text;
-    const sortedKeys = Object.keys(map).sort((a, b) => b.length - a.length);
-
-    sortedKeys.forEach(complex => {
-        const isSingleWord = complex.split(' ').length === 1;
-        const boundary = isSingleWord ? "\\b" : "";
-        
-        const regex = new RegExp(boundary + complex + boundary, "gi");
-
-        result = result.replace(regex, (match) => {
-            const simple = map[complex];
-            if (!simple) {
-                return "";
-            }
-
-            if (match === match.toUpperCase()) {
-                return simple.toUpperCase();
-            }
-            if (match[0] === match[0].toUpperCase()) {
-                return simple.charAt(0).toUpperCase() + simple.slice(1).toLowerCase();
-            }
-            return simple.toLowerCase();
-        });
-    });
-    return result;
-}
-
 </script>
 </body>
 </html>
-
