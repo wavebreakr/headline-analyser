@@ -1,228 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Language Grader & Simplifier (V5.0 NLP-Centric)</title>
-
-<style>
-  /* CORE STYLING - V3.0 Blue/White Palette */
-  body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    margin: 0; padding: 0; color: #333;
-    background: linear-gradient(135deg, #e0f7fa 0%, #b3e5fc 100%); 
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  }
-
-  .container {
-    max-width: 700px; 
-    width: calc(100% - 40px); 
-    margin: 32px auto; 
-    padding: 30px; 
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.85); 
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); 
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); 
-    border: 1px solid rgba(255, 255, 255, 0.6);
-  }
-
-  h2 { margin-top: 0; color: #1565c0; text-align: center; font-weight: 800; letter-spacing: -0.5px; }
-
-  .intro-text {
-    background: #e3f2fd; padding: 15px; border-radius: 12px; margin-bottom: 25px;
-    border-left: 4px solid #1565c0; 
-    color: #0d47a1; line-height: 1.5; font-size: 15px;
-  }
-
-  textarea {
-    width: 100%; min-height: 160px; padding: 15px; font-size: 16px; line-height: 1.6;
-    border-radius: 12px; box-sizing: border-box; font-family: inherit; resize: vertical;
-    background: #ffffff; border: 2px solid #e0e0e0; 
-    transition: border-color 0.2s; margin-bottom: 10px;
-  }
-  
-  textarea:focus { outline: none; border-color: #2196f3; box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2); } 
-  textarea#outputText { background: #f5f5f5; color: #2c3e50; font-weight: 500; }
-
-  button {
-    width: 100%; padding: 16px; font-size: 18px; font-weight: 700; border: none; border-radius: 10px;
-    background: #1565c0; color: white; cursor: pointer; margin-top: 5px; margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(21, 101, 192, 0.2); transition: background 0.2s, transform 0.1s;
-  }
-
-  button:hover { background: #0d47a1; }
-  button:active { transform: scale(0.99); } 
-
-  #copyButton {
-    background: #009688; margin-top: 0; margin-bottom: 15px; 
-    box-shadow: 0 4px 6px rgba(0, 150, 136, 0.2);
-  }
-  #copyButton:hover { background: #00796b; }
-
-  /* --- Metric Pill Styling --- */
-  .metric-bar {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 15px;
-  }
-
-  .metric-pill {
-      background: rgba(255, 255, 255, 0.7); 
-      backdrop-filter: blur(10px); 
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 10px 15px;
-      flex: 1;
-      margin: 0 5px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      box-shadow: inset 0 0 0 1px rgba(229, 229, 229, 0.5), 0 2px 4px rgba(0, 0, 0, 0.05);
-  }
-  
-  .metric-pill:first-child { margin-left: 0; }
-  .metric-pill:last-child { margin-right: 0; }
-
-  .metric-label {
-      font-size: 11px;
-      font-weight: 600;
-      color: #546e7a;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-  }
-  
-  .metric-value {
-      font-size: 26px;
-      font-weight: 800;
-      line-height: 1.1;
-      color: #0d47a1; 
-  }
-
-  /* Dynamic Grade Color Classes */
-  .grade-poor { color: #d32f2f; } 
-  .grade-okay { color: #f9a825; } 
-  .grade-good { color: #1e88e5; } 
-  .grade-excellent { color: #388e3c; } 
-
-
-  /* PREMIUM PROMPT STYLES */
-  #premium-prompt {
-    background: linear-gradient(135deg, #fffbe5 0%, #fff8e1 100%); 
-    border: 1px solid #ffe082;
-    border-radius: 12px;
-    padding: 18px;
-    margin-top: 15px;
-    margin-bottom: 20px;
-    text-align: center;
-    color: #424242;
-    box-shadow: 0 2px 10px rgba(255, 213, 79, 0.2);
-  }
-
-  #premium-prompt h3 {
-    margin-top: 0;
-    font-size: 18px;
-    font-weight: 700;
-    color: #ffb300; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    letter-spacing: -0.2px;
-  }
-  #premium-prompt h3 span {
-    margin-left: 8px;
-  }
-
-  #premium-prompt p {
-    font-size: 14px;
-    line-height: 1.5;
-    margin-bottom: 12px;
-  }
-
-  #premium-button {
-    background: #ffb300; 
-    color: white;
-    padding: 10px 20px;
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(255, 179, 0, 0.3);
-    transition: background 0.2s, transform 0.1s;
-  }
-  #premium-button:hover { background: #ffa000; }
-  #premium-button:active { transform: scale(0.98); }
-
-</style>
-<script src="https://unpkg.com/compromise"></script>
-</head>
-
-<body>
-<div class="container">
-  <h2>Plain Language Grader</h2>
-
-  <div class="intro-text">
-      The tool simplifies complex text and objectively grades its readability using the Flesch-Kincaid formula.
-  </div>
-
-  <div class="metric-bar">
-    <div class="metric-pill">
-      <div class="metric-label">Original Word Count</div>
-      <div class="metric-value" id="originalWordCount">N/A</div>
-    </div>
-    <div class="metric-pill">
-      <div class="metric-label">Original Grade Level</div>
-      <div class="metric-value" id="gradeLevel">N/A</div>
-    </div>
-  </div>
-  <textarea id="inputText" placeholder="Paste complex text here (e.g. 'The Lessee shall endeavor to...')"></textarea>
-
-  <button onclick="runSimplify()">Simplify & Grade Text</button>
-
-  <div class="metric-bar">
-    <div class="metric-pill">
-      <div class="metric-label">Simplified Word Count</div>
-      <div class="metric-value" id="simplifiedWordCount">N/A</div>
-    </div>
-    <div class="metric-pill">
-      <div class="metric-label">Simplified Grade Level</div>
-      <div class="metric-value" id="simplifiedGradeLevel">N/A</div>
-    </div>
-  </div>
-  <textarea id="outputText" readonly placeholder="Simplified text will appear here..."></textarea>
-  
-  <button id="copyButton" onclick="copyToClipboard()">Copy Result</button>
-  
-  <div id="premium-prompt">
-      <h3>
-          <span style="font-size: 24px;">🔒</span> 
-          <span>Unlock Advanced Context Simplification</span>
-      </h3>
-      <p>
-          The current tool uses fast dictionary lookups. For ambiguity, verb tense, and true sentence restructuring, upgrade to **Premium** and get the powerful **NLP Engine**.
-      </p>
-      <button id="premium-button">Learn About Premium</button>
-  </div>
-  
-</div>
-
-<script>
-// ==========================================
-// V5.0: NLP-CENTRIC SIMPLIFICATION
-// ==========================================
-
-// ONLY the essential wordMap for key legal jargon is kept.
-const essentialWordMap = {
-    "shall": "must", 
-    "prior to": "before", 
-    "subsequent to": "after",
-    "the aforementioned": "this",
-    "due to the fact that": "because",
-    "is hereby deemed a material breach of this agreement": "is a major break of this contract",
-    "notwithstanding the provisions": "even with the rules"
-};
-
 // CORE FUNCTION: RUN SIMPLIFICATION (Now focused on NLP)
 function runSimplify() {
     const inputTextarea = document.getElementById('inputText');
@@ -237,191 +12,48 @@ function runSimplify() {
 
     updateStats(inputText, ""); 
     
+    // --- 1. Initial Processing and Splitting ---
     let processedText = inputText;
     
-    // --- 1. Essential Jargon Replacement (Simple Regex Pass) ---
-    // We keep this simple pass to quickly catch major legal terms before the NLP pass.
+    // 1a. Essential Jargon Replacement (Simple Regex Pass - MUST RUN FIRST)
     processedText = applyReplacements(processedText, essentialWordMap);
 
-    // --- 2. COMPROMISE.JS PASS (The heavy lifting) ---
+    // 1b. Split the text into an array of sentences for individual NLP processing
+    const sentences = nlp(processedText).sentences().out('array');
+    
+    let finalSimplifiedText = [];
+
+    // --- 2. COMPROMISE.JS PASS (Sentence by Sentence) ---
     try {
-        let doc = nlp(processedText); // Initialize the library
+        sentences.forEach(sentence => {
+            let doc = nlp(sentence); // Initialize the library with ONE clean sentence
 
-        // Simplification Command 1: Expand contractions (e.g., isn't -> is not)
-        doc = doc.contractions().expand(); 
-        
-        // Simplification Command 2: Change passive verbs to active where possible
-        doc = doc.verbs().toActive();
-        
-        // Simplification Command 3: Add periods to force sentence breaking (improves Flesch-Kincaid score)
-        doc = doc.sentences().toSentences(); 
-        
-        // Simplification Command 4: Remove all adverbs that weaken a phrase (e.g. "highly essential")
-        // Note: We use a custom Compromise filter for a more advanced version of fixRedundancy
-        doc.match('(most|very|highly) [adjective]').delete();
+            // Simplification Command 1: Expand contractions (e.g., isn't -> is not)
+            doc = doc.contractions().expand(); 
+            
+            // Simplification Command 2: Change passive verbs to active where possible
+            doc = doc.verbs().toActive();
+            
+            // Simplification Command 3: Remove all adverbs that weaken a phrase 
+            doc.match('(most|very|highly) [adjective]').delete();
 
-        processedText = doc.text(); // Get the text back out
+            let simplifiedSentence = doc.text();
+            
+            // 3. Final cleaning and capitalization pass (on the single sentence)
+            simplifiedSentence = cleanAndCapitalize(simplifiedSentence); 
+
+            finalSimplifiedText.push(simplifiedSentence);
+        });
         
     } catch (e) {
         // If the library fails, fall back to the raw text to prevent crashing.
-        console.error("Compromise.js error:", e);
+        console.error("Compromise.js error during iteration:", e);
+        finalSimplifiedText = [processedText]; // Fallback to raw text
     }
     // --- END COMPROMISE.JS PASS ---
 
 
-    // 3. Final cleaning and capitalization pass
-    const simplifiedLines = processedText.split('\n').map(line => {
-        if (line.trim().length === 0) {
-            return line;
-        }
-        return cleanAndCapitalize(line); 
-    });
-
-    const outputText = simplifiedLines.join('\n');
+    const outputText = finalSimplifiedText.join(' '); // Join sentences with a space
     outputTextarea.value = outputText;
     updateStats(inputText, outputText); 
 }
-
-// ==========================================
-// HELPER FUNCTIONS (RETAINED)
-// ==========================================
-
-// ONLY applyReplacements and metrics helpers are kept.
-function cleanAndCapitalize(line) {
-    let cleaned = line.trim();
-    cleaned = cleaned.replace(/([.?!]\s*)[a-z]/gi, (match, p1) => p1 + match.charAt(match.length - 1).toUpperCase());
-    if (cleaned.length > 0) {
-        const firstLetterIndex = cleaned.search(/[a-zA-Z]/);
-        if (firstLetterIndex !== -1) {
-            cleaned = cleaned.substring(0, firstLetterIndex) + cleaned.charAt(firstLetterIndex).toUpperCase() + cleaned.slice(firstLetterIndex + 1);
-        }
-    }
-    cleaned = cleaned.replace(/(\s+)/g, ' ').replace(/\s+\./g, '.').replace(/\.\./g, '.').replace(/\s+,/g, ',').trim();
-    return cleaned;
-}
-function applyReplacements(text, map) {
-    let result = text;
-    const sortedKeys = Object.keys(map).sort((a, b) => b.length - a.length);
-
-    sortedKeys.forEach(complex => {
-        const isSingleWord = complex.split(' ').length === 1;
-        const boundary = isSingleWord ? "\\b" : "";
-        const regex = new RegExp(boundary + complex + boundary, "gi");
-
-        result = result.replace(regex, (match) => {
-            const simple = map[complex];
-            if (!simple) return "";
-            if (match === match.toUpperCase()) return simple.toUpperCase();
-            if (match[0] === match[0].toUpperCase()) {
-                return simple.charAt(0).toUpperCase() + simple.slice(1).toLowerCase();
-            }
-            return simple.toLowerCase();
-        });
-    });
-    return result;
-}
-
-function countSyllables(text) {
-    let count = 0;
-    const words = text.toLowerCase().match(/\b[a-z]+\b/g) || [];
-
-    words.forEach(word => {
-        word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
-        word = word.replace(/^y/, '');
-        const match = word.match(/[aeiouy]{1,2}/g);
-        let syllables = match ? match.length : 0;
-        if (syllables === 0 && word.length > 0) { syllables = 1; }
-        count += syllables;
-    });
-    return count;
-}
-function countSentences(text) {
-    if (!text || text.trim().length === 0) return 0;
-    return (text.match(/([.?!])\s*[A-Z]/g) || []).length + 1;
-}
-function calculateFleschKincaid(words, sentences, syllables) {
-    if (words === 0 || sentences === 0) return 0;
-    const avgWordsPerSentence = words / sentences;
-    const avgSyllablesPerWord = syllables / words;
-    const gradeLevel = (0.39 * avgWordsPerSentence) + (11.8 * avgSyllablesPerWord) - 15.59;
-    return Math.max(0, gradeLevel).toFixed(1);
-}
-
-function getGradeColorClass(gradeValue) {
-    const grade = parseFloat(gradeValue);
-    if (isNaN(grade)) return '';
-    
-    if (grade <= 6.0) return 'grade-excellent'; 
-    if (grade <= 9.0) return 'grade-good';      
-    if (grade <= 12.0) return 'grade-okay';     
-    return 'grade-poor';                        
-}
-
-function updateStats(originalText, simplifiedText) {
-    const origWords = wordCount(originalText);
-    const simpWords = wordCount(simplifiedText);
-
-    const origSentences = countSentences(originalText);
-    const origSyllables = countSyllables(originalText);
-    const origGrade = calculateFleschKincaid(origWords, origSentences, origSyllables);
-    
-    const simpSentences = countSentences(simplifiedText);
-    const simpSyllables = countSyllables(simplifiedText);
-    const simpGrade = calculateFleschKincaid(simpWords, simpSentences, simpSyllables);
-
-    const originalGradeElement = document.getElementById('gradeLevel');
-    const simplifiedGradeElement = document.getElementById('simplifiedGradeLevel');
-    const originalWordCountElement = document.getElementById('originalWordCount');
-    const simplifiedWordCountElement = document.getElementById('simplifiedWordCount');
-    
-    if (!simplifiedText) {
-        originalWordCountElement.innerText = origWords || 'N/A';
-        originalGradeElement.innerText = origWords > 0 ? origGrade : 'N/A';
-        originalGradeElement.className = 'metric-value ' + getGradeColorClass(origGrade);
-
-        simplifiedWordCountElement.innerText = 'N/A';
-        simplifiedGradeElement.innerText = 'N/A';
-        simplifiedGradeElement.className = 'metric-value';
-    } else {
-        originalWordCountElement.innerText = origWords;
-        originalGradeElement.innerText = origGrade;
-        originalGradeElement.className = 'metric-value ' + getGradeColorClass(origGrade);
-        
-        simplifiedWordCountElement.innerText = simpWords;
-        simplifiedGradeLevel.innerText = simpGrade;
-        simplifiedGradeElement.className = 'metric-value ' + getGradeColorClass(simpGrade);
-    }
-}
-
-function wordCount(text) {
-    return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-function copyToClipboard() {
-    const outputTextarea = document.getElementById('outputText');
-    if (outputTextarea.value.trim().length === 0) {
-        alert("Nothing to copy!");
-        return;
-    }
-    outputTextarea.select();
-    document.execCommand('copy');
-    
-    const copyButton = document.getElementById('copyButton');
-    const originalText = copyButton.innerText;
-    copyButton.innerText = "Copied! 🎉";
-    
-    setTimeout(() => {
-        copyButton.innerText = originalText;
-    }, 1500);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    updateStats('', '');
-    document.getElementById('premium-button').onclick = function() {
-        alert("The Premium Tier is launching soon! Get ready for a truly powerful NLP engine.");
-    };
-});
-</script>
-</body>
-</html>
-
