@@ -125,10 +125,13 @@
 </div>
 
 <script>
-// --- DICTIONARIES (EXPANDED) ---
+// --- DICTIONARIES (EXPANDED FOR TEST A FIXES) ---
 
 const phraseMap = {
-    // New legal/business terms
+    // FIX A: Avoid "We are cannot" by targeting the whole negative phrase
+    "We are not in a position to": "We cannot",
+    // FIX B: New legal/business terms
+    "shall not be deemed acceptable": "is not allowed", 
     "is hereby deemed a material breach of this agreement": "is a major break of this contract",
     "notwithstanding the provisions": "even with the rules",
     "is currently contingent upon": "depends on",
@@ -170,7 +173,7 @@ const phraseMap = {
     "in the event that": "if",
     "notwithstanding the fact that": "although",
     "in the absence of": "without",
-    "not in a position to": "cannot",
+    "not in a position to": "cannot", // This can stay, but the more specific fix above is better for that case
     "on the basis of": "by",
     "at a later date": "later",
     "perform a review of": "review",
@@ -184,17 +187,19 @@ const phraseMap = {
 };
 
 const wordMap = {
-    // New and enhanced words
+    // FIX A: Add missed words
+    "aforementioned": "this", 
+    "shall": "must",
+    "irrefutable": "clear",
+    // FIX B: Existing and enhanced words
     "necessitate": "require", 
     "implementation": "use",
     "validation": "testing",
     "stipulated": "written",
     "accrued": "earned",
     "transmit": "send",
-    "said": "the", // context-specific simplification
-    "rigorous": "strict", // keeps the qualifier but simplifies the word
-    
-    // Existing
+    "said": "the",
+    "rigorous": "strict",
     "exhibit": "show",
     "exhibiting": "showing",
     "acquire": "get",
@@ -254,7 +259,6 @@ const wordMap = {
     "consult": "ask"
 };
 
-// Conjunctions are now replaced with a new sentence (Period + Capitalized replacement)
 const conjunctionMap = {
     "furthermore": "Also",
     "moreover": "Also",
@@ -265,7 +269,7 @@ const conjunctionMap = {
     "accordingly": "So"
 };
 
-// --- CORE FUNCTIONS ---
+// --- CORE FUNCTIONS (Only cleanAndCapitalize is heavily modified) ---
 
 function runSimplify() {
     const inputText = document.getElementById('inputText').value;
@@ -283,13 +287,8 @@ function runSimplify() {
 
         let outputLine = originalLine;
         
-        // Step 1: Apply all replacements (Phrases, Words, and Conjunctions)
         outputLine = simplifyLine(outputLine);
-        
-        // Step 2: Fix redundancy (must run after replacements to catch new simple words)
         outputLine = fixRedundancy(outputLine);
-
-        // Step 3: Clean up capitalization and spacing
         outputLine = cleanAndCapitalize(outputLine, originalLine);
         
         return outputLine;
@@ -303,20 +302,15 @@ function runSimplify() {
 function simplifyLine(line) {
     let result = line;
     
-    // 1. Apply Phrase and Word Map replacements
     result = applyReplacements(result, phraseMap);
     result = applyReplacements(result, wordMap);
 
-    // 2. Fix conjunction usage (e.g., ", furthermore " -> ". Also ")
     for (const complex in conjunctionMap) {
         const simple = conjunctionMap[complex];
-        // This regex now finds ", complex" followed by optional space, and replaces it with ". Simple. "
         const regex = new RegExp("[,;]\\s*" + complex + "\\s*([\\.|,|\\s])", "gi");
-        // Ensure the replacement starts a new sentence and the word is capitalized
         result = result.replace(regex, ". " + simple + ". ");
     }
     
-    // 3. Simple punctuation fixes
     result = result.replace(/; \s*([A-Z])/gi, ". $1"); 
     result = result.replace(/, and /gi, " and ");
     result = result.replace(/, but /gi, " but ");
@@ -326,20 +320,16 @@ function simplifyLine(line) {
 }
 
 function fixRedundancy(line) {
-    // Expanded list of weak/filler intensifiers
     const weakAdverbs = ["most", "very", "highly", "result", "thorough", "robust", "full"];
     const absoluteAdjectives = ["best", "full", "perfect", "complete", "unique", "big", "strict", "major"];
     let result = line;
 
     weakAdverbs.forEach(adverb => {
         absoluteAdjectives.forEach(adjective => {
-            // Regex to find: (weakAdverb) (optional whitespace) (absoluteAdjective)
             const regex = new RegExp("\\b" + adverb + "\\s+" + adjective + "\\b", "gi");
             result = result.replace(regex, (match) => {
                 const lowerMatch = match.toLowerCase();
-                // If the match contains both words, return only the adjective (with proper capitalization)
                 if (lowerMatch.includes(adverb) && lowerMatch.includes(adjective)) {
-                    // Return the adjective, attempting to preserve initial capitalization
                     return match.includes(adjective.toUpperCase()) ? adjective.toUpperCase() : adjective;
                 }
                 return adjective;
@@ -350,7 +340,48 @@ function fixRedundancy(line) {
     return result;
 }
 
-// --- UTILITY FUNCTIONS (Unchanged from previous revision) ---
+function cleanAndCapitalize(line, originalLine) {
+    if (!line || line.trim().length === 0) {
+        return line;
+    }
+    
+    const listMarkerMatch = originalLine.match(/\s*([I|V|X|A-Za-z0-9]+\.|\*|-|•)\s*/);
+    const listMarker = listMarkerMatch ? listMarkerMatch[0] : "";
+    
+    let cleaned = line.substring(listMarker.length); // Keep the start of line
+    
+    if (!listMarkerMatch) {
+        cleaned = line;
+    }
+    
+    // CRITICAL FIX: Ensure leading whitespace is trimmed after replacements
+    cleaned = cleaned.trim(); 
+    
+    // 1. Ensure sentence start capitalization (after period, question mark, or exclamation mark)
+    cleaned = cleaned.replace(/([.?!]\s*)[a-z]/gi, (match, p1) => p1 + match.charAt(match.length - 1).toUpperCase());
+
+    // 2. Capitalize the first letter of the cleaned line if it's a letter
+    if (cleaned.length > 0 && cleaned.match(/[a-zA-Z]/)) {
+        // Find the index of the first letter
+        const firstLetterIndex = cleaned.search(/[a-zA-Z]/);
+        if (firstLetterIndex !== -1) {
+            cleaned = cleaned.substring(0, firstLetterIndex) + 
+                      cleaned.charAt(firstLetterIndex).toUpperCase() + 
+                      cleaned.slice(firstLetterIndex + 1);
+        }
+    }
+    
+    // 3. General cleanup
+    cleaned = cleaned.replace(/(\s+)/g, ' ')
+                      .replace(/\s+\./g, '')
+                      .replace(/\.\./g, '')
+                      .replace(/\s+,/g, '')
+                      .trim();
+
+    return listMarker ? listMarker + cleaned : cleaned;
+}
+
+// --- UTILITY FUNCTIONS (Unchanged) ---
 
 function copyToClipboard() {
     const outputTextarea = document.getElementById('outputText');
@@ -409,35 +440,6 @@ function applyReplacements(text, map) {
         });
     });
     return result;
-}
-
-function cleanAndCapitalize(line, originalLine) {
-    if (!line || line.trim().length === 0) {
-        return line;
-    }
-    
-    const listMarkerMatch = originalLine.match(/\s*([I|V|X|A-Za-z0-9]+\.|\*|-|•)\s*/);
-    const listMarker = listMarkerMatch ? listMarkerMatch[0] : "";
-    
-    let cleaned = line.substring(listMarker.length).trim();
-    
-    if (!listMarkerMatch) {
-        cleaned = line;
-    }
-
-    cleaned = cleaned.replace(/([.?!]\s*)[a-z]/gi, (match, p1) => p1 + match.charAt(match.length - 1).toUpperCase());
-
-    if (cleaned.length > 0) {
-        cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-    }
-    
-    cleaned = cleaned.replace(/(\s+)/g, ' ')
-                      .replace(/\s+\./g, '')
-                      .replace(/\.\./g, '')
-                      .replace(/\s+,/g, '')
-                      .trim();
-
-    return listMarker ? listMarker + cleaned : cleaned;
 }
 
 </script>
