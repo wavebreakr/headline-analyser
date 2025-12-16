@@ -3,67 +3,65 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Language Grader & Simplifier (V2.10 Final Polish: Colourless Haze)</title>
+<title>Language Grader & Simplifier (V3.0 Revert to Original Design)</title>
 
 <style>
-  /* CORE STYLING - Updated for "Almost Colourless" Haze */
+  /* CORE STYLING - Reverting to Original V2.0 Blue/White Palette */
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0; padding: 0; color: #333;
-    /* V2.10: Extremely light, near-white gradient. Only the faintest hint of purple left. */
-    background: linear-gradient(135deg, #fdfdfd 0%, #fefbff 100%); 
+    /* Reverted: Original light blue gradient */
+    background: linear-gradient(135deg, #e0f7fa 0%, #b3e5fc 100%); 
     min-height: 100vh; display: flex; align-items: center; justify-content: center;
   }
 
   .container {
-    max-width: 700px;
-    width: calc(100% - 40px); 
+    max-width: 700px; 
+    width: calc(100% - 40px); /* Retains V2.9 Polish: consistent side margins */
     margin: 32px auto; 
     padding: 30px; 
     border-radius: 20px;
     
-    /* Maxed out opacity and blur for the haziest Liquid Glass effect */
-    background: rgba(255, 255, 255, 0.98); 
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.02); /* Minimal, softest shadow */
-    backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
-    border: 1px solid rgba(240, 240, 240, 0.9); /* Border is nearly invisible */
+    background: rgba(255, 255, 255, 0.85); /* Original Opacity/Haze */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); 
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); 
+    border: 1px solid rgba(255, 255, 255, 0.6);
   }
 
-  h2 { margin-top: 0; color: #8e8e93; /* Very light, subtle gray heading */ text-align: center; font-weight: 800; letter-spacing: -0.5px; }
+  h2 { margin-top: 0; color: #1565c0; /* Reverted H2 to primary blue */ text-align: center; font-weight: 800; letter-spacing: -0.5px; }
 
   .intro-text {
-    background: #fcfcff; /* Near-white background */ padding: 15px; border-radius: 12px; margin-bottom: 25px;
-    border-left: 4px solid #d1c4e9; /* Very light, faint purple accent */
-    color: #444; line-height: 1.5; font-size: 15px;
+    background: #e3f2fd; /* Light blue background */ padding: 15px; border-radius: 12px; margin-bottom: 25px;
+    border-left: 4px solid #1565c0; /* Primary blue accent */
+    color: #0d47a1; /* Dark blue text */ line-height: 1.5; font-size: 15px;
   }
 
   textarea {
     width: 100%; min-height: 160px; padding: 15px; font-size: 16px; line-height: 1.6;
     border-radius: 12px; box-sizing: border-box; font-family: inherit; resize: vertical;
-    background: #ffffff; border: 2px solid #eeeeee; /* Lighter border */
+    background: #ffffff; border: 2px solid #e0e0e0; 
     transition: border-color 0.2s; margin-bottom: 10px;
   }
   
-  textarea:focus { outline: none; border-color: #d1c4e9; box-shadow: 0 0 0 3px rgba(209, 196, 233, 0.3); } /* Faint focus color */
-  textarea#outputText { background: #fefefe; color: #2c3e50; font-weight: 500; }
+  textarea:focus { outline: none; border-color: #2196f3; box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2); } /* Reverted focus color to blue */
+  textarea#outputText { background: #f5f5f5; color: #2c3e50; font-weight: 500; }
 
   button {
     width: 100%; padding: 16px; font-size: 18px; font-weight: 700; border: none; border-radius: 10px;
-    background: #9575cd; /* Primary button color retained for contrast */ color: white; cursor: pointer; margin-top: 5px; margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(149, 117, 205, 0.1); transition: background 0.2s, transform 0.1s; /* Reduced shadow intensity */
+    background: #1565c0; /* Reverted main button to primary blue */ color: white; cursor: pointer; margin-top: 5px; margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(21, 101, 192, 0.2); transition: background 0.2s, transform 0.1s;
   }
 
-  button:hover { background: #7e57c2; }
+  button:hover { background: #0d47a1; }
   button:active { transform: scale(0.99); } 
 
   #copyButton {
-    background: #4db6ac; 
-    margin-top: 0; margin-bottom: 15px;
-    box-shadow: 0 4px 6px rgba(77, 182, 172, 0.1); /* Reduced shadow intensity */
+    background: #009688; margin-top: 0; margin-bottom: 15px; /* Copy button remains green/teal for visual contrast */
+    box-shadow: 0 4px 6px rgba(0, 150, 136, 0.2);
   }
-  #copyButton:hover { background: #009688; }
+  #copyButton:hover { background: #00796b; }
 
-  /* --- Metric Pill Styling (Kept consistent) --- */
+  /* --- Metric Pill Styling (Preserving V2.6 Consistency) --- */
   .metric-bar {
       display: flex;
       justify-content: space-between;
@@ -71,9 +69,9 @@
   }
 
   .metric-pill {
-      background: rgba(255, 255, 255, 0.9); /* Very high opacity */
-      backdrop-filter: blur(15px); 
-      -webkit-backdrop-filter: blur(15px);
+      background: rgba(255, 255, 255, 0.7); 
+      backdrop-filter: blur(10px); 
+      -webkit-backdrop-filter: blur(10px);
       
       border-radius: 12px;
       padding: 10px 15px;
@@ -82,7 +80,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      box-shadow: inset 0 0 0 1px rgba(240, 240, 240, 0.8), 0 1px 3px rgba(0, 0, 0, 0.01); /* Super faint internal and external shadow */
+      box-shadow: inset 0 0 0 1px rgba(229, 229, 229, 0.5), 0 2px 4px rgba(0, 0, 0, 0.05);
   }
   
   .metric-pill:first-child { margin-left: 0; }
@@ -91,7 +89,7 @@
   .metric-label {
       font-size: 11px;
       font-weight: 600;
-      color: #9e9e9e; /* Very light gray label text */
+      color: #546e7a;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 4px;
@@ -101,27 +99,27 @@
       font-size: 26px;
       font-weight: 800;
       line-height: 1.1;
-      color: #333; /* Dark text is necessary for contrast/readability */
+      color: #0d47a1; /* Reverted metric value color to dark blue */
   }
 
-  /* Dynamic Grade Color Classes - These must remain vibrant for functional feedback */
+  /* V2.5: Dynamic Grade Color Classes - PRESERVED for functional clarity */
   .grade-poor { color: #d32f2f; } 
   .grade-okay { color: #f9a825; } 
   .grade-good { color: #1e88e5; } 
   .grade-excellent { color: #388e3c; } 
 
 
-  /* PREMIUM PROMPT STYLES - Unchanged */
+  /* PREMIUM PROMPT STYLES - Reverted button color, prompt box retained */
   #premium-prompt {
-    background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%); 
-    border: 1px solid #ffeb3b;
+    background: linear-gradient(135deg, #fffbe5 0%, #fff8e1 100%); 
+    border: 1px solid #ffe082;
     border-radius: 12px;
     padding: 18px;
     margin-top: 15px;
     margin-bottom: 20px;
     text-align: center;
     color: #424242;
-    box-shadow: 0 2px 10px rgba(255, 235, 59, 0.15);
+    box-shadow: 0 2px 10px rgba(255, 213, 79, 0.2);
   }
 
   #premium-prompt h3 {
@@ -145,7 +143,7 @@
   }
 
   #premium-button {
-    background: #ffc107; 
+    background: #ffb300; 
     color: white;
     padding: 10px 20px;
     font-size: 16px;
@@ -153,7 +151,7 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(255, 193, 7, 0.3);
+    box-shadow: 0 2px 5px rgba(255, 179, 0, 0.3);
     transition: background 0.2s, transform 0.1s;
   }
   #premium-button:hover { background: #ffa000; }
